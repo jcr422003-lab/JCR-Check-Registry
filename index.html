@@ -1,1 +1,832 @@
-<h1>Checkbook Register - Coming Soon</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JCR Check Registry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .auth-section {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .accounts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .account-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .account-name {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .account-balance {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .main-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input, select, textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .transaction-table table {
+            width: 100%;
+        }
+
+        .transaction-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .transaction-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .transaction-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .credit {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .debit {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .modal-header h2 {
+            color: #667eea;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .reconcile-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reconcile-summary {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .reconcile-summary div {
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-controls {
+                flex-direction: column;
+            }
+
+            .transaction-table {
+                font-size: 0.9em;
+            }
+
+            .transaction-table th,
+            .transaction-table td {
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JCR Check Registry</h1>
+            <p id="user-email"></p>
+        </header>
+
+        <!-- Auth Section -->
+        <div id="auth-section" class="auth-section">
+            <h2>Welcome to JCR Check Registry</h2>
+            <p style="margin: 20px 0;">Please sign in to access your accounts</p>
+            <button class="btn" onclick="handleSignIn()">Sign In with Google</button>
+        </div>
+
+        <!-- Main App -->
+        <div id="main-app" class="hidden">
+            <!-- Account Balances -->
+            <div class="accounts-grid" id="accounts-grid"></div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="toolbar">
+                    <div>
+                        <button class="btn" onclick="showAddTransaction()">+ Add Transaction</button>
+                        <button class="btn btn-secondary" onclick="showReconcile()">Reconcile</button>
+                        <button class="btn btn-secondary" onclick="showManage()">Manage</button>
+                    </div>
+                    <div class="filter-controls">
+                        <input type="date" id="start-date" onchange="loadTransactions()">
+                        <input type="date" id="end-date" onchange="loadTransactions()">
+                        <select id="account-filter" onchange="loadTransactions()">
+                            <option value="">All Accounts</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+                    </div>
+                </div>
+
+                <div class="transaction-table" id="transactions-container">
+                    <div class="loading">Loading transactions...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Transaction Modal -->
+        <div id="add-transaction-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('add-transaction-modal')">&times;</span>
+                <div class="modal-header">
+                    <h2>Add Transaction</h2>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="txn-date" required>
+                </div>
+                <div class="form-group">
+                    <label>Account</label>
+                    <select id="txn-account" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Payee</label>
+                    <input type="text" id="txn-payee" list="payee-list" required>
+                    <datalist id="payee-list"></datalist>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="txn-category" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="txn-type" required>
+                        <option value="credit">Credit (Deposit)</option>
+                        <option value="debit">Debit (Withdrawal)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="txn-amount" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Memo</label>
+                    <textarea id="txn-memo" rows="3"></textarea>
+                </div>
+                <button class="btn btn-success" onclick="saveTransaction()">Save Transaction</button>
+                <button class="btn btn-secondary" onclick="closeModal('add-transaction-modal')">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Reconcile Modal -->
+        <div id="reconcile-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('reconcile-modal')">&times;</span>
+                <div class="modal-header">
+                    <h2>Reconcile Account</h2>
+                </div>
+                <div class="form-group">
+                    <label>Select Account</label>
+                    <select id="reconcile-account" onchange="loadReconcileTransactions()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Statement Balance</label>
+                    <input type="number" id="statement-balance" step="0.01">
+                </div>
+                <div class="reconcile-summary" id="reconcile-summary"></div>
+                <div id="reconcile-items"></div>
+                <button class="btn btn-success" onclick="saveReconciliation()">Save Reconciliation</button>
+                <button class="btn btn-secondary" onclick="closeModal('reconcile-modal')">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Manage Modal -->
+        <div id="manage-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('manage-modal')">&times;</span>
+                <div class="modal-header">
+                    <h2>Manage Accounts & Categories</h2>
+                </div>
+                <h3>Add New Account</h3>
+                <div class="form-group">
+                    <input type="text" id="new-account-name" placeholder="Account Name">
+                    <input type="number" id="new-account-balance" placeholder="Initial Balance" step="0.01">
+                    <button class="btn" onclick="addAccount()">Add Account</button>
+                </div>
+                <h3 style="margin-top: 30px;">Add New Category</h3>
+                <div class="form-group">
+                    <input type="text" id="new-category-name" placeholder="Category Name">
+                    <button class="btn" onclick="addCategory()">Add Category</button>
+                </div>
+                <button class="btn btn-secondary" onclick="closeModal('manage-modal')" style="margin-top: 20px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        const CLIENT_ID = '844911784466-5e3j5a23cp7j7470in5ntqlhjaeau3hg.apps.googleusercontent.com';
+        const SPREADSHEET_ID = '1h9fgmKiOHExTzFvZU4XExRk7Io0SFYyJowiR-mOPkiE';
+        const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+        
+        let tokenClient;
+        let accessToken = null;
+        let accounts = [];
+        let categories = [];
+        let payees = [];
+        let transactions = [];
+
+        // Initialize on load
+        window.onload = function() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: (response) => {
+                    if (response.access_token) {
+                        accessToken = response.access_token;
+                        onSignIn();
+                    }
+                },
+            });
+        };
+
+        function handleSignIn() {
+            tokenClient.requestAccessToken();
+        }
+
+        async function onSignIn() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            await loadAllData();
+            setDefaultDateRange();
+        }
+
+        function setDefaultDateRange() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            
+            document.getElementById('end-date').valueAsDate = today;
+            document.getElementById('start-date').valueAsDate = thirtyDaysAgo;
+        }
+
+        async function loadAllData() {
+            await Promise.all([
+                loadAccounts(),
+                loadCategories(),
+                loadPayees(),
+                loadTransactions()
+            ]);
+        }
+
+        async function loadAccounts() {
+            const data = await fetchSheetData('Accounts!A2:B');
+            accounts = data.map(row => ({
+                name: row[0],
+                initialBalance: parseFloat(row[1] || 0)
+            }));
+            renderAccounts();
+            populateAccountDropdowns();
+        }
+
+        async function loadCategories() {
+            const data = await fetchSheetData('Categories!A2:A');
+            categories = data.map(row => row[0]);
+            populateCategoryDropdowns();
+        }
+
+        async function loadPayees() {
+            const data = await fetchSheetData('Payees!A2:A');
+            payees = data.map(row => row[0]);
+            populatePayeeList();
+        }
+
+        async function loadTransactions() {
+            const data = await fetchSheetData('Transactions!A2:J');
+            transactions = data.map(row => ({
+                id: row[0],
+                date: row[1],
+                account: row[2],
+                payee: row[3],
+                category: row[4],
+                amount: parseFloat(row[5] || 0),
+                memo: row[6],
+                reconciled: row[7] === 'Y',
+                enteredBy: row[8],
+                entryTimestamp: row[9]
+            }));
+            
+            renderTransactions();
+            renderAccounts(); // Update balances
+        }
+
+        async function fetchSheetData(range) {
+            try {
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`,
+                    {
+                        headers: { Authorization: `Bearer ${accessToken}` }
+                    }
+                );
+                const data = await response.json();
+                return data.values || [];
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return [];
+            }
+        }
+
+        async function appendSheetData(range, values) {
+            try {
+                await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ values: [values] })
+                    }
+                );
+            } catch (error) {
+                console.error('Error appending data:', error);
+            }
+        }
+
+        async function updateSheetData(range, values) {
+            try {
+                await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ values: [values] })
+                    }
+                );
+            } catch (error) {
+                console.error('Error updating data:', error);
+            }
+        }
+
+        function renderAccounts() {
+            const grid = document.getElementById('accounts-grid');
+            grid.innerHTML = accounts.map(account => {
+                const balance = calculateAccountBalance(account.name);
+                return `
+                    <div class="account-card">
+                        <div class="account-name">${account.name}</div>
+                        <div class="account-balance">$${balance.toFixed(2)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function calculateAccountBalance(accountName) {
+            const account = accounts.find(a => a.name === accountName);
+            const accountTxns = transactions.filter(t => t.account === accountName);
+            const txnTotal = accountTxns.reduce((sum, t) => sum + t.amount, 0);
+            return (account?.initialBalance || 0) + txnTotal;
+        }
+
+        function renderTransactions() {
+            const container = document.getElementById('transactions-container');
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const accountFilter = document.getElementById('account-filter').value;
+            
+            let filtered = transactions.filter(t => {
+                if (startDate && t.date < startDate) return false;
+                if (endDate && t.date > endDate) return false;
+                if (accountFilter && t.account !== accountFilter) return false;
+                return true;
+            });
+
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="loading">No transactions found</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Account</th>
+                            <th>Payee</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Reconciled</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filtered.map(t => `
+                            <tr>
+                                <td>${t.date}</td>
+                                <td>${t.account}</td>
+                                <td>${t.payee}</td>
+                                <td>${t.category}</td>
+                                <td class="${t.amount >= 0 ? 'credit' : 'debit'}">$${Math.abs(t.amount).toFixed(2)}</td>
+                                <td>${t.reconciled ? '✓' : ''}</td>
+                                <td>
+                                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.9em;" 
+                                        onclick="deleteTransaction('${t.id}', '${t.payee}')">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function populateAccountDropdowns() {
+            const selects = ['txn-account', 'account-filter', 'reconcile-account'];
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                const currentValue = select.value;
+                select.innerHTML = (id === 'account-filter' ? '<option value="">All Accounts</option>' : '') +
+                    accounts.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+                if (currentValue) select.value = currentValue;
+            });
+        }
+
+        function populateCategoryDropdowns() {
+            const select = document.getElementById('txn-category');
+            select.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function populatePayeeList() {
+            const datalist = document.getElementById('payee-list');
+            datalist.innerHTML = payees.map(p => `<option value="${p}">`).join('');
+        }
+
+        function showAddTransaction() {
+            document.getElementById('txn-date').valueAsDate = new Date();
+            document.getElementById('add-transaction-modal').style.display = 'block';
+        }
+
+        async function saveTransaction() {
+            const date = document.getElementById('txn-date').value;
+            const account = document.getElementById('txn-account').value;
+            const payee = document.getElementById('txn-payee').value;
+            const category = document.getElementById('txn-category').value;
+            const type = document.getElementById('txn-type').value;
+            const amount = parseFloat(document.getElementById('txn-amount').value);
+            const memo = document.getElementById('txn-memo').value;
+
+            if (!date || !account || !payee || !category || !amount) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const finalAmount = type === 'credit' ? amount : -amount;
+            const id = Date.now().toString();
+            const timestamp = new Date().toISOString();
+            const enteredBy = 'User'; // You can enhance this later
+
+            await appendSheetData('Transactions', [
+                id, date, account, payee, category, finalAmount, memo, 'N', enteredBy, timestamp
+            ]);
+
+            // Add payee if new
+            if (!payees.includes(payee)) {
+                await appendSheetData('Payees', [payee]);
+                payees.push(payee);
+                populatePayeeList();
+            }
+
+            closeModal('add-transaction-modal');
+            await loadTransactions();
+            
+            // Clear form
+            document.getElementById('txn-payee').value = '';
+            document.getElementById('txn-amount').value = '';
+            document.getElementById('txn-memo').value = '';
+        }
+
+        async function deleteTransaction(id, payee) {
+            if (!confirm(`Are you sure you want to delete the transaction for ${payee}?`)) {
+                return;
+            }
+
+            // Find row number (add 2 for header and 0-indexing)
+            const rowIndex = transactions.findIndex(t => t.id === id) + 2;
+            
+            // Delete by clearing the row (Google Sheets API limitation)
+            await updateSheetData(`Transactions!A${rowIndex}:J${rowIndex}`, ['', '', '', '', '', '', '', '', '', '']);
+            
+            await loadTransactions();
+        }
+
+        function showReconcile() {
+            document.getElementById('reconcile-modal').style.display = 'block';
+            loadReconcileTransactions();
+        }
+
+        function loadReconcileTransactions() {
+            const account = document.getElementById('reconcile-account').value;
+            if (!account) return;
+
+            const unreconciled = transactions.filter(t => t.account === account && !t.reconciled);
+            const clearedBalance = transactions
+                .filter(t => t.account === account && t.reconciled)
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const accountObj = accounts.find(a => a.name === account);
+            const totalCleared = (accountObj?.initialBalance || 0) + clearedBalance;
+
+            const unclearedTotal = unreconciled.reduce((sum, t) => sum + t.amount, 0);
+            const statementBalance = parseFloat(document.getElementById('statement-balance').value) || 0;
+            const difference = statementBalance - totalCleared - unclearedTotal;
+
+            document.getElementById('reconcile-summary').innerHTML = `
+                <div><strong>Statement Balance:</strong> $${statementBalance.toFixed(2)}</div>
+                <div><strong>Cleared Balance:</strong> $${totalCleared.toFixed(2)}</div>
+                <div><strong>Uncleared Total:</strong> $${unclearedTotal.toFixed(2)}</div>
+                <div><strong>Difference:</strong> <span style="color: ${Math.abs(difference) < 0.01 ? 'green' : 'red'}">$${difference.toFixed(2)}</span></div>
+            `;
+
+            const container = document.getElementById('reconcile-items');
+            container.innerHTML = unreconciled.map(t => `
+                <div class="reconcile-item">
+                    <label>
+                        <input type="checkbox" class="reconcile-check" data-id="${t.id}">
+                        ${t.date} - ${t.payee} - $${Math.abs(t.amount).toFixed(2)}
+                    </label>
+                </div>
+            `).join('');
+        }
+
+        async function saveReconciliation() {
+            const checks = document.querySelectorAll('.reconcile-check:checked');
+            const ids = Array.from(checks).map(c => c.dataset.id);
+
+            for (const id of ids) {
+                const rowIndex = transactions.findIndex(t => t.id === id) + 2;
+                await updateSheetData(`Transactions!H${rowIndex}`, ['Y']);
+            }
+
+            closeModal('reconcile-modal');
+            await loadTransactions();
+        }
+
+        function showManage() {
+            document.getElementById('manage-modal').style.display = 'block';
+        }
+
+        async function addAccount() {
+            const name = document.getElementById('new-account-name').value;
+            const balance = parseFloat(document.getElementById('new-account-balance').value) || 0;
+
+            if (!name) {
+                alert('Please enter an account name');
+                return;
+            }
+
+            await appendSheetData('Accounts', [name, balance]);
+            await loadAccounts();
+            
+            document.getElementById('new-account-name').value = '';
+            document.getElementById('new-account-balance').value = '';
+            alert('Account added successfully!');
+        }
+
+        async function addCategory() {
+            const name = document.getElementById('new-category-name').value;
+
+            if (!name) {
+                alert('Please enter a category name');
+                return;
+            }
+
+            await appendSheetData('Categories', [name]);
+            await loadCategories();
+            
+            document.getElementById('new-category-name').value = '';
+            alert('Category added successfully!');
+        }
+
+        function resetFilters() {
+            setDefaultDateRange();
+            document.getElementById('account-filter').value = '';
+            loadTransactions();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
