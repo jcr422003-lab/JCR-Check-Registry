@@ -94,6 +94,13 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .account-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
         .account-name {
@@ -299,7 +306,7 @@
                     <p id="user-email"></p>
                 </div>
                 <div style="flex: 1; text-align: right; font-size: 0.9em; opacity: 0.8;">
-                    v202601300215
+                    v202601300230
                 </div>
             </div>
         </header>
@@ -323,29 +330,8 @@
                         <button class="btn" onclick="showAddTransaction()">+ Add Transaction</button>
                         <button class="btn btn-secondary" onclick="showReconcile()">Reconcile</button>
                         <button class="btn btn-secondary" onclick="showManage()">Manage</button>
+                        <button class="btn btn-secondary" onclick="showSearch()">Search</button>
                     </div>
-                    <div class="filter-controls">
-                        <input type="date" id="start-date" onchange="loadTransactions()">
-                        <input type="date" id="end-date" onchange="loadTransactions()">
-                        <select id="account-filter" onchange="loadTransactions()">
-                            <option value="">All Accounts</option>
-                        </select>
-                        <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
-                    </div>
-                </div>
-
-                <div class="filter-controls" style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                    <input type="text" id="payee-filter" placeholder="Search Payee..." oninput="loadTransactions()" style="margin-right: 10px;">
-                    <select id="category-filter" onchange="loadTransactions()" style="margin-right: 10px;">
-                        <option value="">All Categories</option>
-                    </select>
-                    <input type="number" id="amount-filter" placeholder="Amount..." step="0.01" oninput="loadTransactions()" style="margin-right: 10px; width: 120px;">
-                    <select id="reconciled-filter" onchange="loadTransactions()" style="margin-right: 10px;">
-                        <option value="">All (Reconciled)</option>
-                        <option value="Y">Reconciled</option>
-                        <option value="N">Not Reconciled</option>
-                    </select>
-                    <button class="btn btn-secondary" onclick="resetSearchFilters()">Clear Search</button>
                 </div>
 
                 <div class="transaction-table" id="transactions-container">
@@ -404,6 +390,11 @@
                     <label>Memo</label>
                     <textarea id="txn-memo" rows="3"></textarea>
                 </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="txn-reconciled"> Reconciled
+                    </label>
+                </div>
                 <button class="btn btn-success" onclick="saveTransaction()">Save Transaction</button>
                 <button class="btn btn-secondary" onclick="closeModal('add-transaction-modal')">Cancel</button>
             </div>
@@ -452,6 +443,93 @@
                 <button class="btn btn-secondary" onclick="closeModal('manage-modal')" style="margin-top: 20px;">Close</button>
             </div>
         </div>
+
+        <!-- Account Details Modal -->
+        <div id="account-details-modal" class="modal">
+            <div class="modal-content" style="max-width: 900px;">
+                <span class="close" onclick="closeModal('account-details-modal')">&times;</span>
+                <div class="modal-header">
+                    <h2 id="account-details-title"></h2>
+                </div>
+                <div id="account-details-content"></div>
+                <button class="btn btn-secondary" onclick="closeModal('account-details-modal')" style="margin-top: 20px;">Close</button>
+            </div>
+        </div>
+
+        <!-- Search Modal -->
+        <div id="search-modal" class="modal">
+            <div class="modal-content" style="max-width: 900px;">
+                <span class="close" onclick="closeModal('search-modal')">&times;</span>
+                <div class="modal-header">
+                    <h2>Search & Filter Transactions</h2>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label>Date Range</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="date" id="search-start-date">
+                            <input type="date" id="search-end-date">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Account</label>
+                        <select id="search-account-filter">
+                            <option value="">All Accounts</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Payee</label>
+                        <input type="text" id="search-payee-filter" placeholder="Search Payee...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Check Number</label>
+                        <input type="text" id="search-check-filter" placeholder="Check #...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="search-category-filter">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" id="search-amount-filter" placeholder="Exact amount..." step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Reconciled Status</label>
+                        <select id="search-reconciled-filter">
+                            <option value="">All</option>
+                            <option value="Y">Reconciled</option>
+                            <option value="N">Not Reconciled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Sort By</label>
+                        <select id="search-sort-by">
+                            <option value="date-desc">Date (Newest First)</option>
+                            <option value="date-asc">Date (Oldest First)</option>
+                            <option value="amount-desc">Amount (Highest First)</option>
+                            <option value="amount-asc">Amount (Lowest First)</option>
+                            <option value="payee-asc">Payee (A-Z)</option>
+                            <option value="payee-desc">Payee (Z-A)</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn" onclick="applySearch()">Apply Search</button>
+                    <button class="btn btn-secondary" onclick="clearSearch()">Clear All</button>
+                </div>
+                
+                <div id="search-results-content"></div>
+            </div>
+        </div>
     </div>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -498,8 +576,11 @@
             const thirtyDaysAgo = new Date(today);
             thirtyDaysAgo.setDate(today.getDate() - 30);
             
-            document.getElementById('end-date').valueAsDate = today;
-            document.getElementById('start-date').valueAsDate = thirtyDaysAgo;
+            const searchStartDate = document.getElementById('search-start-date');
+            const searchEndDate = document.getElementById('search-end-date');
+            
+            if (searchEndDate) searchEndDate.valueAsDate = today;
+            if (searchStartDate) searchStartDate.valueAsDate = thirtyDaysAgo;
         }
 
         async function loadAllData() {
@@ -611,9 +692,9 @@
             grid.innerHTML = accounts.map(account => {
                 const balance = calculateAccountBalance(account.name);
                 return `
-                    <div class="account-card">
+                    <div class="account-card" onclick="showAccountDetails('${account.name}')">
                         <div class="account-name">${account.name}</div>
-                        <div class="account-balance">$${balance.toFixed(2)}</div>
+                        <div class="account-balance">${balance.toFixed(2)}</div>
                     </div>
                 `;
             }).join('');
@@ -693,11 +774,13 @@
         }
 
         function populateAccountDropdowns() {
-            const selects = ['txn-account', 'account-filter', 'reconcile-account', 'transfer-to-account'];
+            const selects = ['txn-account', 'reconcile-account', 'transfer-to-account', 'search-account-filter'];
             selects.forEach(id => {
                 const select = document.getElementById(id);
+                if (!select) return;
                 const currentValue = select.value;
-                select.innerHTML = (id === 'account-filter' ? '<option value="">All Accounts</option>' : '') +
+                const isSearchFilter = id === 'search-account-filter';
+                select.innerHTML = (isSearchFilter ? '<option value="">All Accounts</option>' : '') +
                     accounts.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
                 if (currentValue) select.value = currentValue;
             });
@@ -709,7 +792,8 @@
         }
 
         function populateCategoryFilter() {
-            const select = document.getElementById('category-filter');
+            const select = document.getElementById('search-category-filter');
+            if (!select) return;
             select.innerHTML = '<option value="">All Categories</option>' +
                 categories.map(c => `<option value="${c}">${c}</option>`).join('');
         }
@@ -729,6 +813,7 @@
             document.getElementById('txn-check-number').value = '';
             document.getElementById('txn-amount').value = '';
             document.getElementById('txn-memo').value = '';
+            document.getElementById('txn-reconciled').checked = false;
             document.getElementById('transfer-to-group').classList.add('hidden');
             document.getElementById('add-transaction-modal').style.display = 'block';
         }
@@ -748,6 +833,7 @@
             document.getElementById('txn-category').value = txn.category;
             document.getElementById('txn-amount').value = Math.abs(txn.amount);
             document.getElementById('txn-memo').value = txn.memo || '';
+            document.getElementById('txn-reconciled').checked = txn.reconciled;
             
             // Set type based on amount
             if (txn.amount >= 0) {
@@ -784,6 +870,7 @@
             const type = document.getElementById('txn-type').value;
             const amount = parseFloat(document.getElementById('txn-amount').value);
             const memo = document.getElementById('txn-memo').value;
+            const reconciled = document.getElementById('txn-reconciled').checked ? 'Y' : 'N';
             const transferToAccount = document.getElementById('transfer-to-account').value;
             const editId = document.getElementById('edit-transaction-id').value;
             const editRow = document.getElementById('edit-transaction-row').value;
@@ -809,11 +896,10 @@
             // Check if this is an edit
             if (editId) {
                 const finalAmount = type === 'credit' ? amount : -amount;
-                const existingTxn = transactions.find(t => t.id === editId);
                 
                 await updateSheetData(`Transactions!A${editRow}:K${editRow}`, [
                     editId, date, account, payee, checkNumber, category, finalAmount, memo, 
-                    existingTxn.reconciled ? 'Y' : 'N', enteredBy, timestamp
+                    reconciled, enteredBy, timestamp
                 ]);
                 
                 // Add payee if new
@@ -828,18 +914,18 @@
                 const id2 = (Date.now() + 1).toString();
                 
                 await appendSheetData('Transactions', [
-                    id1, date, account, `Transfer to ${transferToAccount}`, '', category, -amount, memo, 'N', enteredBy, timestamp
+                    id1, date, account, `Transfer to ${transferToAccount}`, '', category, -amount, memo, reconciled, enteredBy, timestamp
                 ]);
                 
                 await appendSheetData('Transactions', [
-                    id2, date, transferToAccount, `Transfer from ${account}`, '', category, amount, memo, 'N', enteredBy, timestamp
+                    id2, date, transferToAccount, `Transfer from ${account}`, '', category, amount, memo, reconciled, enteredBy, timestamp
                 ]);
             } else {
                 const finalAmount = type === 'credit' ? amount : -amount;
                 const id = Date.now().toString();
 
                 await appendSheetData('Transactions', [
-                    id, date, account, payee, checkNumber, category, finalAmount, memo, 'N', enteredBy, timestamp
+                    id, date, account, payee, checkNumber, category, finalAmount, memo, reconciled, enteredBy, timestamp
                 ]);
 
                 // Add payee if new
@@ -858,6 +944,7 @@
             document.getElementById('txn-check-number').value = '';
             document.getElementById('txn-amount').value = '';
             document.getElementById('txn-memo').value = '';
+            document.getElementById('txn-reconciled').checked = false;
             document.getElementById('transfer-to-group').classList.add('hidden');
             document.getElementById('edit-transaction-id').value = '';
             document.getElementById('edit-transaction-row').value = '';
@@ -942,15 +1029,28 @@
 
         async function saveReconciliation() {
             const checks = document.querySelectorAll('.reconcile-check:checked');
-            const ids = Array.from(checks).map(c => c.dataset.id);
-
-            for (const id of ids) {
-                const rowIndex = transactions.findIndex(t => t.id === id) + 2;
-                await updateSheetData(`Transactions!I${rowIndex}`, ['Y']);
+            
+            if (checks.length === 0) {
+                alert('Please select at least one transaction to reconcile');
+                return;
             }
 
+            // Update each checked transaction
+            for (const checkbox of checks) {
+                const id = checkbox.dataset.id;
+                const txn = transactions.find(t => t.id === id);
+                if (txn) {
+                    const rowIndex = transactions.findIndex(t => t.id === id) + 2;
+                    // Update just the Reconciled column (I)
+                    await updateSheetData(`Transactions!I${rowIndex}`, ['Y']);
+                }
+            }
+
+            alert('Reconciliation saved successfully!');
             closeModal('reconcile-modal');
-            await loadTransactions();
+            
+            // Reload all data to ensure consistency
+            await loadAllData();
         }
 
         function showManage() {
@@ -990,17 +1090,171 @@
         }
 
         function resetFilters() {
-            setDefaultDateRange();
-            document.getElementById('account-filter').value = '';
-            resetSearchFilters();
+            // This function is no longer needed but kept for compatibility
         }
 
         function resetSearchFilters() {
-            document.getElementById('payee-filter').value = '';
-            document.getElementById('category-filter').value = '';
-            document.getElementById('amount-filter').value = '';
-            document.getElementById('reconciled-filter').value = '';
-            loadTransactions();
+            // This function is no longer needed but kept for compatibility
+        }
+
+        function showAccountDetails(accountName) {
+            document.getElementById('account-details-title').textContent = accountName;
+            
+            const accountTxns = transactions.filter(t => t.account === accountName);
+            accountTxns.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const balance = calculateAccountBalance(accountName);
+            
+            const content = document.getElementById('account-details-content');
+            content.innerHTML = `
+                <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">Current Balance: ${balance.toFixed(2)}</h3>
+                    <p style="margin: 5px 0 0 0;">Total Transactions: ${accountTxns.length}</p>
+                </div>
+                ${accountTxns.length === 0 ? '<p>No transactions for this account yet.</p>' : `
+                    <div class="transaction-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Payee</th>
+                                    <th>Check #</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Reconciled</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${accountTxns.map(t => `
+                                    <tr>
+                                        <td>${t.date}</td>
+                                        <td>${t.payee}</td>
+                                        <td>${t.checkNumber || ''}</td>
+                                        <td>${t.category}</td>
+                                        <td class="${t.amount >= 0 ? 'credit' : 'debit'}">${Math.abs(t.amount).toFixed(2)}</td>
+                                        <td>${t.reconciled ? '✓' : ''}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
+            `;
+            
+            document.getElementById('account-details-modal').style.display = 'block';
+        }
+
+        function showSearch() {
+            setDefaultDateRange();
+            document.getElementById('search-modal').style.display = 'block';
+            applySearch();
+        }
+
+        function applySearch() {
+            const startDate = document.getElementById('search-start-date').value;
+            const endDate = document.getElementById('search-end-date').value;
+            const accountFilter = document.getElementById('search-account-filter').value;
+            const payeeFilter = document.getElementById('search-payee-filter').value.toLowerCase();
+            const checkFilter = document.getElementById('search-check-filter').value.toLowerCase();
+            const categoryFilter = document.getElementById('search-category-filter').value;
+            const amountFilter = document.getElementById('search-amount-filter').value;
+            const reconciledFilter = document.getElementById('search-reconciled-filter').value;
+            const sortBy = document.getElementById('search-sort-by').value;
+            
+            let filtered = transactions.filter(t => {
+                if (startDate && t.date < startDate) return false;
+                if (endDate && t.date > endDate) return false;
+                if (accountFilter && t.account !== accountFilter) return false;
+                if (payeeFilter && !t.payee.toLowerCase().includes(payeeFilter)) return false;
+                if (checkFilter && !(t.checkNumber || '').toLowerCase().includes(checkFilter)) return false;
+                if (categoryFilter && t.category !== categoryFilter) return false;
+                if (amountFilter && Math.abs(t.amount) !== Math.abs(parseFloat(amountFilter))) return false;
+                if (reconciledFilter) {
+                    const isReconciled = t.reconciled ? 'Y' : 'N';
+                    if (isReconciled !== reconciledFilter) return false;
+                }
+                return true;
+            });
+
+            // Sort results
+            switch(sortBy) {
+                case 'date-desc':
+                    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    break;
+                case 'date-asc':
+                    filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    break;
+                case 'amount-desc':
+                    filtered.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+                    break;
+                case 'amount-asc':
+                    filtered.sort((a, b) => Math.abs(a.amount) - Math.abs(b.amount));
+                    break;
+                case 'payee-asc':
+                    filtered.sort((a, b) => a.payee.localeCompare(b.payee));
+                    break;
+                case 'payee-desc':
+                    filtered.sort((a, b) => b.payee.localeCompare(a.payee));
+                    break;
+            }
+
+            const content = document.getElementById('search-results-content');
+            
+            if (filtered.length === 0) {
+                content.innerHTML = '<div class="loading">No transactions found matching your search criteria</div>';
+                return;
+            }
+
+            content.innerHTML = `
+                <div style="margin-bottom: 10px; font-weight: bold;">Found ${filtered.length} transaction${filtered.length === 1 ? '' : 's'}</div>
+                <div class="transaction-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Account</th>
+                                <th>Payee</th>
+                                <th>Check #</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Reconciled</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.map(t => `
+                                <tr>
+                                    <td>${t.date}</td>
+                                    <td>${t.account}</td>
+                                    <td>${t.payee}</td>
+                                    <td>${t.checkNumber || ''}</td>
+                                    <td>${t.category}</td>
+                                    <td class="${t.amount >= 0 ? 'credit' : 'debit'}">${Math.abs(t.amount).toFixed(2)}</td>
+                                    <td>${t.reconciled ? '✓' : ''}</td>
+                                    <td>
+                                        <button class="btn" style="padding: 5px 10px; font-size: 0.9em; margin-right: 5px;" 
+                                            onclick='editTransaction(${JSON.stringify(t)}); closeModal("search-modal")'>Edit</button>
+                                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.9em;" 
+                                            onclick="deleteTransaction('${t.id}', '${t.payee}')">Delete</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function clearSearch() {
+            document.getElementById('search-payee-filter').value = '';
+            document.getElementById('search-check-filter').value = '';
+            document.getElementById('search-category-filter').value = '';
+            document.getElementById('search-amount-filter').value = '';
+            document.getElementById('search-reconciled-filter').value = '';
+            document.getElementById('search-account-filter').value = '';
+            document.getElementById('search-sort-by').value = 'date-desc';
+            setDefaultDateRange();
+            applySearch();
         }
 
         function closeModal(modalId) {
