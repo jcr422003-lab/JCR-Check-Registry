@@ -306,7 +306,7 @@
                     <p id="user-email"></p>
                 </div>
                 <div style="flex: 1; text-align: right; font-size: 0.9em; opacity: 0.8;">
-                    v202601300255
+                    v202601300300
                 </div>
             </div>
         </header>
@@ -534,6 +534,7 @@
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
+        // CACHE BUSTER v202601300255 - FORCE RELOAD
         const CLIENT_ID = '844911784466-5e3j5a23cp7j7470in5ntqlhjaeau3hg.apps.googleusercontent.com';
         const SPREADSHEET_ID = '1h9fgmKiOHExTzFvZU4XExRk7Io0SFYyJowiR-mOPkiE';
         const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
@@ -876,92 +877,98 @@
         });
 
         async function saveTransaction() {
-            const date = document.getElementById('txn-date').value;
-            const account = document.getElementById('txn-account').value;
-            const payee = document.getElementById('txn-payee').value;
-            const checkNumber = document.getElementById('txn-check-number').value;
-            const category = document.getElementById('txn-category').value;
-            const type = document.getElementById('txn-type').value;
-            const amount = parseFloat(document.getElementById('txn-amount').value);
-            const memo = document.getElementById('txn-memo').value;
-            const reconciled = document.getElementById('txn-reconciled').checked ? 'Y' : 'N';
-            const transferToAccount = document.getElementById('transfer-to-account').value;
-            const editId = document.getElementById('edit-transaction-id').value;
-            const editRow = document.getElementById('edit-transaction-row').value;
+            try {
+                const date = document.getElementById('txn-date').value;
+                const account = document.getElementById('txn-account').value;
+                const payee = document.getElementById('txn-payee').value;
+                const checkNumber = document.getElementById('txn-check-number').value || '';
+                const category = document.getElementById('txn-category').value;
+                const type = document.getElementById('txn-type').value;
+                const amount = parseFloat(document.getElementById('txn-amount').value);
+                const memo = document.getElementById('txn-memo').value || '';
+                const reconciled = document.getElementById('txn-reconciled').checked ? 'Y' : 'N';
+                const transferToAccount = document.getElementById('transfer-to-account') ? document.getElementById('transfer-to-account').value : '';
+                const editId = document.getElementById('edit-transaction-id').value;
+                const editRow = document.getElementById('edit-transaction-row').value;
 
-            if (!date || !account || !payee || !category || !amount) {
-                alert('Please fill in all required fields');
-                return;
-            }
-
-            if (type === 'transfer' && !transferToAccount) {
-                alert('Please select a transfer destination account');
-                return;
-            }
-
-            if (type === 'transfer' && account === transferToAccount) {
-                alert('Cannot transfer to the same account');
-                return;
-            }
-
-            const timestamp = new Date().toISOString();
-            const enteredBy = 'User';
-
-            // Check if this is an edit
-            if (editId) {
-                const finalAmount = type === 'credit' ? amount : -amount;
-                
-                await updateSheetData(`Transactions!A${editRow}:K${editRow}`, [
-                    editId, date, account, payee, checkNumber, category, finalAmount, memo, 
-                    reconciled, enteredBy, timestamp
-                ]);
-                
-                // Add payee if new
-                if (!payees.includes(payee)) {
-                    await appendSheetData('Payees', [payee]);
-                    payees.push(payee);
-                    populatePayeeList();
+                if (!date || !account || !payee || !category || !amount) {
+                    alert('Please fill in all required fields');
+                    return;
                 }
-            } else if (type === 'transfer') {
-                // Create two transactions for a transfer
-                const id1 = Date.now().toString();
-                const id2 = (Date.now() + 1).toString();
-                
-                await appendSheetData('Transactions', [
-                    id1, date, account, `Transfer to ${transferToAccount}`, '', category, -amount, memo, reconciled, enteredBy, timestamp
-                ]);
-                
-                await appendSheetData('Transactions', [
-                    id2, date, transferToAccount, `Transfer from ${account}`, '', category, amount, memo, reconciled, enteredBy, timestamp
-                ]);
-            } else {
-                const finalAmount = type === 'credit' ? amount : -amount;
-                const id = Date.now().toString();
 
-                await appendSheetData('Transactions', [
-                    id, date, account, payee, checkNumber, category, finalAmount, memo, reconciled, enteredBy, timestamp
-                ]);
-
-                // Add payee if new
-                if (!payees.includes(payee)) {
-                    await appendSheetData('Payees', [payee]);
-                    payees.push(payee);
-                    populatePayeeList();
+                if (type === 'transfer' && !transferToAccount) {
+                    alert('Please select a transfer destination account');
+                    return;
                 }
-            }
 
-            closeModal('add-transaction-modal');
-            await loadTransactions();
-            
-            // Clear form
-            document.getElementById('txn-payee').value = '';
-            document.getElementById('txn-check-number').value = '';
-            document.getElementById('txn-amount').value = '';
-            document.getElementById('txn-memo').value = '';
-            document.getElementById('txn-reconciled').checked = false;
-            document.getElementById('transfer-to-group').classList.add('hidden');
-            document.getElementById('edit-transaction-id').value = '';
-            document.getElementById('edit-transaction-row').value = '';
+                if (type === 'transfer' && account === transferToAccount) {
+                    alert('Cannot transfer to the same account');
+                    return;
+                }
+
+                const timestamp = new Date().toISOString();
+                const enteredBy = 'User';
+
+                // Check if this is an edit
+                if (editId) {
+                    const finalAmount = type === 'credit' ? amount : -amount;
+                    
+                    await updateSheetData(`Transactions!A${editRow}:K${editRow}`, [
+                        editId, date, account, payee, checkNumber, category, finalAmount, memo, 
+                        reconciled, enteredBy, timestamp
+                    ]);
+                    
+                    // Add payee if new
+                    if (!payees.includes(payee)) {
+                        await appendSheetData('Payees', [payee]);
+                        payees.push(payee);
+                        populatePayeeList();
+                    }
+                } else if (type === 'transfer') {
+                    // Create two transactions for a transfer
+                    const id1 = Date.now().toString();
+                    const id2 = (Date.now() + 1).toString();
+                    
+                    await appendSheetData('Transactions', [
+                        id1, date, account, `Transfer to ${transferToAccount}`, '', category, -amount, memo, reconciled, enteredBy, timestamp
+                    ]);
+                    
+                    await appendSheetData('Transactions', [
+                        id2, date, transferToAccount, `Transfer from ${account}`, '', category, amount, memo, reconciled, enteredBy, timestamp
+                    ]);
+                } else {
+                    const finalAmount = type === 'credit' ? amount : -amount;
+                    const id = Date.now().toString();
+
+                    await appendSheetData('Transactions', [
+                        id, date, account, payee, checkNumber, category, finalAmount, memo, reconciled, enteredBy, timestamp
+                    ]);
+
+                    // Add payee if new
+                    if (!payees.includes(payee)) {
+                        await appendSheetData('Payees', [payee]);
+                        payees.push(payee);
+                        populatePayeeList();
+                    }
+                }
+
+                closeModal('add-transaction-modal');
+                await loadTransactions();
+                
+                // Clear form
+                document.getElementById('txn-payee').value = '';
+                document.getElementById('txn-check-number').value = '';
+                document.getElementById('txn-amount').value = '';
+                document.getElementById('txn-memo').value = '';
+                document.getElementById('txn-reconciled').checked = false;
+                const transferGroup = document.getElementById('transfer-to-group');
+                if (transferGroup) transferGroup.classList.add('hidden');
+                document.getElementById('edit-transaction-id').value = '';
+                document.getElementById('edit-transaction-row').value = '';
+            } catch (error) {
+                console.error('Error in saveTransaction:', error);
+                alert('Error saving transaction: ' + error.message);
+            }
         }
 
         async function deleteTransaction(id, payee) {
