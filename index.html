@@ -359,9 +359,14 @@
                 <div class="form-group">
                     <label>Type</label>
                     <select id="txn-type" required>
-                        <option value="credit">Credit (Deposit)</option>
+                        <option value="credit" selected>Credit (Deposit)</option>
                         <option value="debit">Debit (Withdrawal)</option>
+                        <option value="transfer">Transfer Between Accounts</option>
                     </select>
+                </div>
+                <div class="form-group hidden" id="transfer-to-group">
+                    <label>Transfer To Account</label>
+                    <select id="transfer-to-account"></select>
                 </div>
                 <div class="form-group">
                     <label>Amount</label>
@@ -645,7 +650,7 @@
         }
 
         function populateAccountDropdowns() {
-            const selects = ['txn-account', 'account-filter', 'reconcile-account'];
+            const selects = ['txn-account', 'account-filter', 'reconcile-account', 'transfer-to-account'];
             selects.forEach(id => {
                 const select = document.getElementById(id);
                 const currentValue = select.value;
@@ -667,8 +672,25 @@
 
         function showAddTransaction() {
             document.getElementById('txn-date').valueAsDate = new Date();
+            document.getElementById('txn-type').value = 'credit';
+            document.getElementById('transfer-to-group').classList.add('hidden');
             document.getElementById('add-transaction-modal').style.display = 'block';
         }
+
+        // Show/hide transfer account dropdown based on type
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeSelect = document.getElementById('txn-type');
+            if (typeSelect) {
+                typeSelect.addEventListener('change', function() {
+                    const transferGroup = document.getElementById('transfer-to-group');
+                    if (this.value === 'transfer') {
+                        transferGroup.classList.remove('hidden');
+                    } else {
+                        transferGroup.classList.add('hidden');
+                    }
+                });
+            }
+        });
 
         async function saveTransaction() {
             const date = document.getElementById('txn-date').value;
@@ -678,26 +700,54 @@
             const type = document.getElementById('txn-type').value;
             const amount = parseFloat(document.getElementById('txn-amount').value);
             const memo = document.getElementById('txn-memo').value;
+            const transferToAccount = document.getElementById('transfer-to-account').value;
 
             if (!date || !account || !payee || !category || !amount) {
                 alert('Please fill in all required fields');
                 return;
             }
 
-            const finalAmount = type === 'credit' ? amount : -amount;
-            const id = Date.now().toString();
+            if (type === 'transfer' && !transferToAccount) {
+                alert('Please select a transfer destination account');
+                return;
+            }
+
+            if (type === 'transfer' && account === transferToAccount) {
+                alert('Cannot transfer to the same account');
+                return;
+            }
+
             const timestamp = new Date().toISOString();
-            const enteredBy = 'User'; // You can enhance this later
+            const enteredBy = 'User';
 
-            await appendSheetData('Transactions', [
-                id, date, account, payee, category, finalAmount, memo, 'N', enteredBy, timestamp
-            ]);
+            if (type === 'transfer') {
+                // Create two transactions for a transfer
+                const id1 = Date.now().toString();
+                const id2 = (Date.now() + 1).toString();
+                
+                // Debit from source account
+                await appendSheetData('Transactions', [
+                    id1, date, account, `Transfer to ${transferToAccount}`, category, -amount, memo, 'N', enteredBy, timestamp
+                ]);
+                
+                // Credit to destination account
+                await appendSheetData('Transactions', [
+                    id2, date, transferToAccount, `Transfer from ${account}`, category, amount, memo, 'N', enteredBy, timestamp
+                ]);
+            } else {
+                const finalAmount = type === 'credit' ? amount : -amount;
+                const id = Date.now().toString();
 
-            // Add payee if new
-            if (!payees.includes(payee)) {
-                await appendSheetData('Payees', [payee]);
-                payees.push(payee);
-                populatePayeeList();
+                await appendSheetData('Transactions', [
+                    id, date, account, payee, category, finalAmount, memo, 'N', enteredBy, timestamp
+                ]);
+
+                // Add payee if new
+                if (!payees.includes(payee)) {
+                    await appendSheetData('Payees', [payee]);
+                    payees.push(payee);
+                    populatePayeeList();
+                }
             }
 
             closeModal('add-transaction-modal');
@@ -707,6 +757,7 @@
             document.getElementById('txn-payee').value = '';
             document.getElementById('txn-amount').value = '';
             document.getElementById('txn-memo').value = '';
+            document.getElementById('transfer-to-group').classList.add('hidden');
         }
 
         async function deleteTransaction(id, payee) {
@@ -738,28 +789,52 @@
                 .reduce((sum, t) => sum + t.amount, 0);
             
             const accountObj = accounts.find(a => a.name === account);
-            const totalCleared = (accountObj?.initialBalance || 0) + clearedBalance;
+            const accountInitialBalance = accountObj?.initialBalance || 0;
+            const totalCleared = accountInitialBalance + clearedBalance;
 
-            const unclearedTotal = unreconciled.reduce((sum, t) => sum + t.amount, 0);
-            const statementBalance = parseFloat(document.getElementById('statement-balance').value) || 0;
-            const difference = statementBalance - totalCleared - unclearedTotal;
-
-            document.getElementById('reconcile-summary').innerHTML = `
-                <div><strong>Statement Balance:</strong> $${statementBalance.toFixed(2)}</div>
-                <div><strong>Cleared Balance:</strong> $${totalCleared.toFixed(2)}</div>
-                <div><strong>Uncleared Total:</strong> $${unclearedTotal.toFixed(2)}</div>
-                <div><strong>Difference:</strong> <span style="color: ${Math.abs(difference) < 0.01 ? 'green' : 'red'}">$${difference.toFixed(2)}</span></div>
-            `;
+            updateReconcileSummary(account, totalCleared, unreconciled);
 
             const container = document.getElementById('reconcile-items');
             container.innerHTML = unreconciled.map(t => `
                 <div class="reconcile-item">
                     <label>
-                        <input type="checkbox" class="reconcile-check" data-id="${t.id}">
-                        ${t.date} - ${t.payee} - $${Math.abs(t.amount).toFixed(2)}
+                        <input type="checkbox" class="reconcile-check" data-id="${t.id}" data-amount="${t.amount}" onchange="updateReconcileSummary()">
+                        ${t.date} - ${t.payee} - ${Math.abs(t.amount).toFixed(2)}
                     </label>
                 </div>
             `).join('');
+        }
+
+        function updateReconcileSummary(account, totalCleared, unreconciled) {
+            // If called from checkbox, get values from DOM
+            if (!account) {
+                account = document.getElementById('reconcile-account').value;
+                const accountObj = accounts.find(a => a.name === account);
+                const clearedBalance = transactions
+                    .filter(t => t.account === account && t.reconciled)
+                    .reduce((sum, t) => sum + t.amount, 0);
+                totalCleared = (accountObj?.initialBalance || 0) + clearedBalance;
+                unreconciled = transactions.filter(t => t.account === account && !t.reconciled);
+            }
+
+            const statementBalance = parseFloat(document.getElementById('statement-balance').value) || 0;
+            
+            // Calculate newly cleared items
+            const checkedBoxes = document.querySelectorAll('.reconcile-check:checked');
+            const newlyCleared = Array.from(checkedBoxes).reduce((sum, cb) => {
+                return sum + parseFloat(cb.dataset.amount);
+            }, 0);
+
+            const projectedBalance = totalCleared + newlyCleared;
+            const difference = statementBalance - projectedBalance;
+
+            document.getElementById('reconcile-summary').innerHTML = `
+                <div><strong>Statement Balance:</strong> ${statementBalance.toFixed(2)}</div>
+                <div><strong>Currently Cleared Balance:</strong> ${totalCleared.toFixed(2)}</div>
+                <div><strong>Newly Cleared Items:</strong> ${newlyCleared.toFixed(2)}</div>
+                <div><strong>Projected Cleared Balance:</strong> ${projectedBalance.toFixed(2)}</div>
+                <div><strong>Difference:</strong> <span style="color: ${Math.abs(difference) < 0.01 ? 'green' : 'red'}; font-weight: bold;">${difference.toFixed(2)}</span></div>
+            `;
         }
 
         async function saveReconciliation() {
