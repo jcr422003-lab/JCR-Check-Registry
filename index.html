@@ -306,7 +306,7 @@
                     <p id="user-email"></p>
                 </div>
                 <div style="flex: 1; text-align: right; font-size: 0.9em; opacity: 0.8;">
-                    v202601300320
+                    v202601300325
                 </div>
             </div>
         </header>
@@ -643,7 +643,7 @@
                 console.log('[loadTransactions] Parsed transactions:', transactions);
                 console.log('[loadTransactions] About to call renderTransactions...');
                 
-                renderTransactionsV2();
+                renderTransactions();
                 
                 console.log('[loadTransactions] About to call renderAccounts...');
                 renderAccounts(); // Update balances
@@ -1182,8 +1182,10 @@
         }
 
         function applySearch() {
-            const startDate = document.getElementById('search-start-date').value;
-            const endDate = document.getElementById('search-end-date').value;
+            console.log('[applySearch] ENTRY');
+            try {
+                const startDate = document.getElementById('search-start-date').value;
+                const endDate = document.getElementById('search-end-date').value;
             const accountFilter = document.getElementById('search-account-filter').value;
             const payeeFilter = document.getElementById('search-payee-filter').value.toLowerCase();
             const checkFilter = document.getElementById('search-check-filter').value.toLowerCase();
