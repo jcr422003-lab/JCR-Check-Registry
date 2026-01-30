@@ -299,7 +299,7 @@
                     <p id="user-email"></p>
                 </div>
                 <div style="flex: 1; text-align: right; font-size: 0.9em; opacity: 0.8;">
-                    v202501300130
+                    v202501300145
                 </div>
             </div>
         </header>
@@ -345,8 +345,10 @@
             <div class="modal-content">
                 <span class="close" onclick="closeModal('add-transaction-modal')">&times;</span>
                 <div class="modal-header">
-                    <h2>Add Transaction</h2>
+                    <h2 id="transaction-modal-title">Add Transaction</h2>
                 </div>
+                <input type="hidden" id="edit-transaction-id">
+                <input type="hidden" id="edit-transaction-row">
                 <div class="form-group">
                     <label>Date</label>
                     <input type="date" id="txn-date" required>
@@ -402,7 +404,7 @@
                 </div>
                 <div class="form-group">
                     <label>Statement Balance</label>
-                    <input type="number" id="statement-balance" step="0.01" onblur="updateReconcileSummary()">
+                    <input type="number" id="statement-balance" step="0.01" oninput="updateReconcileSummary()">
                 </div>
                 <div class="reconcile-summary hidden" id="reconcile-summary"></div>
                 <div id="reconcile-items"></div>
@@ -647,6 +649,8 @@
                                 <td class="${t.amount >= 0 ? 'credit' : 'debit'}">$${Math.abs(t.amount).toFixed(2)}</td>
                                 <td>${t.reconciled ? '✓' : ''}</td>
                                 <td>
+                                    <button class="btn" style="padding: 5px 10px; font-size: 0.9em; margin-right: 5px;" 
+                                        onclick='editTransaction(${JSON.stringify(t)})'>Edit</button>
                                     <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.9em;" 
                                         onclick="deleteTransaction('${t.id}', '${t.payee}')">Delete</button>
                                 </td>
@@ -679,8 +683,40 @@
         }
 
         function showAddTransaction() {
+            document.getElementById('transaction-modal-title').textContent = 'Add Transaction';
+            document.getElementById('edit-transaction-id').value = '';
+            document.getElementById('edit-transaction-row').value = '';
             document.getElementById('txn-date').valueAsDate = new Date();
             document.getElementById('txn-type').value = 'debit';
+            document.getElementById('txn-payee').value = '';
+            document.getElementById('txn-amount').value = '';
+            document.getElementById('txn-memo').value = '';
+            document.getElementById('transfer-to-group').classList.add('hidden');
+            document.getElementById('add-transaction-modal').style.display = 'block';
+        }
+
+        function editTransaction(txn) {
+            document.getElementById('transaction-modal-title').textContent = 'Edit Transaction';
+            document.getElementById('edit-transaction-id').value = txn.id;
+            
+            // Find the row number
+            const rowIndex = transactions.findIndex(t => t.id === txn.id) + 2;
+            document.getElementById('edit-transaction-row').value = rowIndex;
+            
+            document.getElementById('txn-date').value = txn.date;
+            document.getElementById('txn-account').value = txn.account;
+            document.getElementById('txn-payee').value = txn.payee;
+            document.getElementById('txn-category').value = txn.category;
+            document.getElementById('txn-amount').value = Math.abs(txn.amount);
+            document.getElementById('txn-memo').value = txn.memo || '';
+            
+            // Set type based on amount
+            if (txn.amount >= 0) {
+                document.getElementById('txn-type').value = 'credit';
+            } else {
+                document.getElementById('txn-type').value = 'debit';
+            }
+            
             document.getElementById('transfer-to-group').classList.add('hidden');
             document.getElementById('add-transaction-modal').style.display = 'block';
         }
@@ -709,6 +745,8 @@
             const amount = parseFloat(document.getElementById('txn-amount').value);
             const memo = document.getElementById('txn-memo').value;
             const transferToAccount = document.getElementById('transfer-to-account').value;
+            const editId = document.getElementById('edit-transaction-id').value;
+            const editRow = document.getElementById('edit-transaction-row').value;
 
             if (!date || !account || !payee || !category || !amount) {
                 alert('Please fill in all required fields');
@@ -728,17 +766,31 @@
             const timestamp = new Date().toISOString();
             const enteredBy = 'User';
 
-            if (type === 'transfer') {
+            // Check if this is an edit
+            if (editId) {
+                const finalAmount = type === 'credit' ? amount : -amount;
+                const existingTxn = transactions.find(t => t.id === editId);
+                
+                await updateSheetData(`Transactions!A${editRow}:J${editRow}`, [
+                    editId, date, account, payee, category, finalAmount, memo, 
+                    existingTxn.reconciled ? 'Y' : 'N', enteredBy, timestamp
+                ]);
+                
+                // Add payee if new
+                if (!payees.includes(payee)) {
+                    await appendSheetData('Payees', [payee]);
+                    payees.push(payee);
+                    populatePayeeList();
+                }
+            } else if (type === 'transfer') {
                 // Create two transactions for a transfer
                 const id1 = Date.now().toString();
                 const id2 = (Date.now() + 1).toString();
                 
-                // Debit from source account
                 await appendSheetData('Transactions', [
                     id1, date, account, `Transfer to ${transferToAccount}`, category, -amount, memo, 'N', enteredBy, timestamp
                 ]);
                 
-                // Credit to destination account
                 await appendSheetData('Transactions', [
                     id2, date, transferToAccount, `Transfer from ${account}`, category, amount, memo, 'N', enteredBy, timestamp
                 ]);
@@ -766,6 +818,8 @@
             document.getElementById('txn-amount').value = '';
             document.getElementById('txn-memo').value = '';
             document.getElementById('transfer-to-group').classList.add('hidden');
+            document.getElementById('edit-transaction-id').value = '';
+            document.getElementById('edit-transaction-row').value = '';
         }
 
         async function deleteTransaction(id, payee) {
