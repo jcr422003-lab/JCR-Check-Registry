@@ -306,7 +306,7 @@
                     <p id="user-email"></p>
                 </div>
                 <div style="flex: 1; text-align: right; font-size: 0.9em; opacity: 0.8;">
-                    v202601300305
+                    v202601300310
                 </div>
             </div>
         </header>
@@ -618,12 +618,13 @@
 
         async function loadTransactions() {
             try {
+                console.log('[loadTransactions] Fetching data...');
                 const data = await fetchSheetData('Transactions!A2:K');
-                console.log('Raw transaction data from Sheet:', data);
+                console.log('[loadTransactions] Raw transaction data from Sheet:', data);
                 
                 // Filter out empty rows
                 const validData = data.filter(row => row && row[0]);
-                console.log('Valid transaction rows:', validData.length);
+                console.log('[loadTransactions] Valid transaction rows:', validData.length);
                 
                 transactions = validData.map(row => ({
                     id: row[0],
@@ -639,14 +640,23 @@
                     entryTimestamp: row[10]
                 }));
                 
-                console.log('Parsed transactions:', transactions);
+                console.log('[loadTransactions] Parsed transactions:', transactions);
+                console.log('[loadTransactions] About to call renderTransactions...');
                 
                 renderTransactions();
+                
+                console.log('[loadTransactions] About to call renderAccounts...');
                 renderAccounts(); // Update balances
+                
+                console.log('[loadTransactions] Complete!');
             } catch (error) {
-                console.error('Error loading transactions:', error);
-                document.getElementById('transactions-container').innerHTML = 
-                    '<div class="loading" style="color: red;">Error loading transactions. Check console for details.</div>';
+                console.error('[loadTransactions] Error loading transactions:', error);
+                console.error('[loadTransactions] Error stack:', error.stack);
+                const container = document.getElementById('transactions-container');
+                if (container) {
+                    container.innerHTML = 
+                        '<div class="loading" style="color: red;">Error loading transactions. Check console for details.</div>';
+                }
             }
         }
 
