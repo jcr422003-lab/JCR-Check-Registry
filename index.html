@@ -299,7 +299,7 @@
                     <p id="user-email"></p>
                 </div>
                 <div style="flex: 1; text-align: right; font-size: 0.9em; opacity: 0.8;">
-                    v202601300200
+                    v202601300210
                 </div>
             </div>
         </header>
@@ -375,6 +375,10 @@
                     <label>Payee</label>
                     <input type="text" id="txn-payee" list="payee-list" required>
                     <datalist id="payee-list"></datalist>
+                </div>
+                <div class="form-group">
+                    <label>Check # (Optional)</label>
+                    <input type="text" id="txn-check-number" placeholder="Check number">
                 </div>
                 <div class="form-group">
                     <label>Category</label>
@@ -531,18 +535,19 @@
         }
 
         async function loadTransactions() {
-            const data = await fetchSheetData('Transactions!A2:J');
+            const data = await fetchSheetData('Transactions!A2:K');
             transactions = data.map(row => ({
                 id: row[0],
                 date: row[1],
                 account: row[2],
                 payee: row[3],
-                category: row[4],
-                amount: parseFloat(row[5] || 0),
-                memo: row[6],
-                reconciled: row[7] === 'Y',
-                enteredBy: row[8],
-                entryTimestamp: row[9]
+                checkNumber: row[4],
+                category: row[5],
+                amount: parseFloat(row[6] || 0),
+                memo: row[7],
+                reconciled: row[8] === 'Y',
+                enteredBy: row[9],
+                entryTimestamp: row[10]
             }));
             
             renderTransactions();
@@ -721,6 +726,7 @@
             document.getElementById('txn-date').valueAsDate = new Date();
             document.getElementById('txn-type').value = 'debit';
             document.getElementById('txn-payee').value = '';
+            document.getElementById('txn-check-number').value = '';
             document.getElementById('txn-amount').value = '';
             document.getElementById('txn-memo').value = '';
             document.getElementById('transfer-to-group').classList.add('hidden');
@@ -738,6 +744,7 @@
             document.getElementById('txn-date').value = txn.date;
             document.getElementById('txn-account').value = txn.account;
             document.getElementById('txn-payee').value = txn.payee;
+            document.getElementById('txn-check-number').value = txn.checkNumber || '';
             document.getElementById('txn-category').value = txn.category;
             document.getElementById('txn-amount').value = Math.abs(txn.amount);
             document.getElementById('txn-memo').value = txn.memo || '';
@@ -772,6 +779,7 @@
             const date = document.getElementById('txn-date').value;
             const account = document.getElementById('txn-account').value;
             const payee = document.getElementById('txn-payee').value;
+            const checkNumber = document.getElementById('txn-check-number').value;
             const category = document.getElementById('txn-category').value;
             const type = document.getElementById('txn-type').value;
             const amount = parseFloat(document.getElementById('txn-amount').value);
@@ -803,8 +811,8 @@
                 const finalAmount = type === 'credit' ? amount : -amount;
                 const existingTxn = transactions.find(t => t.id === editId);
                 
-                await updateSheetData(`Transactions!A${editRow}:J${editRow}`, [
-                    editId, date, account, payee, category, finalAmount, memo, 
+                await updateSheetData(`Transactions!A${editRow}:K${editRow}`, [
+                    editId, date, account, payee, checkNumber, category, finalAmount, memo, 
                     existingTxn.reconciled ? 'Y' : 'N', enteredBy, timestamp
                 ]);
                 
@@ -820,18 +828,18 @@
                 const id2 = (Date.now() + 1).toString();
                 
                 await appendSheetData('Transactions', [
-                    id1, date, account, `Transfer to ${transferToAccount}`, category, -amount, memo, 'N', enteredBy, timestamp
+                    id1, date, account, `Transfer to ${transferToAccount}`, '', category, -amount, memo, 'N', enteredBy, timestamp
                 ]);
                 
                 await appendSheetData('Transactions', [
-                    id2, date, transferToAccount, `Transfer from ${account}`, category, amount, memo, 'N', enteredBy, timestamp
+                    id2, date, transferToAccount, `Transfer from ${account}`, '', category, amount, memo, 'N', enteredBy, timestamp
                 ]);
             } else {
                 const finalAmount = type === 'credit' ? amount : -amount;
                 const id = Date.now().toString();
 
                 await appendSheetData('Transactions', [
-                    id, date, account, payee, category, finalAmount, memo, 'N', enteredBy, timestamp
+                    id, date, account, payee, checkNumber, category, finalAmount, memo, 'N', enteredBy, timestamp
                 ]);
 
                 // Add payee if new
@@ -847,6 +855,7 @@
             
             // Clear form
             document.getElementById('txn-payee').value = '';
+            document.getElementById('txn-check-number').value = '';
             document.getElementById('txn-amount').value = '';
             document.getElementById('txn-memo').value = '';
             document.getElementById('transfer-to-group').classList.add('hidden');
@@ -863,7 +872,7 @@
             const rowIndex = transactions.findIndex(t => t.id === id) + 2;
             
             // Delete by clearing the row (Google Sheets API limitation)
-            await updateSheetData(`Transactions!A${rowIndex}:J${rowIndex}`, ['', '', '', '', '', '', '', '', '', '']);
+            await updateSheetData(`Transactions!A${rowIndex}:K${rowIndex}`, ['', '', '', '', '', '', '', '', '', '', '']);
             
             await loadTransactions();
         }
