@@ -306,7 +306,7 @@
                     <p id="user-email"></p>
                 </div>
                 <div style="flex: 1; text-align: right; font-size: 0.9em; opacity: 0.8;">
-                    v202601300240
+                    v202601300245
                 </div>
             </div>
         </header>
@@ -616,27 +616,37 @@
         }
 
         async function loadTransactions() {
-            const data = await fetchSheetData('Transactions!A2:K');
-            
-            // Filter out empty rows
-            const validData = data.filter(row => row && row[0]);
-            
-            transactions = validData.map(row => ({
-                id: row[0],
-                date: row[1],
-                account: row[2],
-                payee: row[3],
-                checkNumber: row[4],
-                category: row[5],
-                amount: parseFloat(row[6] || 0),
-                memo: row[7],
-                reconciled: row[8] === 'Y',
-                enteredBy: row[9],
-                entryTimestamp: row[10]
-            }));
-            
-            renderTransactions();
-            renderAccounts(); // Update balances
+            try {
+                const data = await fetchSheetData('Transactions!A2:K');
+                console.log('Raw transaction data from Sheet:', data);
+                
+                // Filter out empty rows
+                const validData = data.filter(row => row && row[0]);
+                console.log('Valid transaction rows:', validData.length);
+                
+                transactions = validData.map(row => ({
+                    id: row[0],
+                    date: row[1],
+                    account: row[2],
+                    payee: row[3],
+                    checkNumber: row[4],
+                    category: row[5],
+                    amount: parseFloat(row[6] || 0),
+                    memo: row[7],
+                    reconciled: row[8] === 'Y',
+                    enteredBy: row[9],
+                    entryTimestamp: row[10]
+                }));
+                
+                console.log('Parsed transactions:', transactions);
+                
+                renderTransactions();
+                renderAccounts(); // Update balances
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('transactions-container').innerHTML = 
+                    '<div class="loading" style="color: red;">Error loading transactions. Check console for details.</div>';
+            }
         }
 
         async function fetchSheetData(range) {
