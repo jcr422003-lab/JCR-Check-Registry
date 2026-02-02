@@ -59,9 +59,8 @@
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 500px;
-            margin: 100px auto;
+            max-width: 600px;
+            margin: 50px auto;
         }
 
         .auth-container h2 {
@@ -71,8 +70,52 @@
 
         .auth-container p {
             color: #666;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             line-height: 1.6;
+        }
+
+        .setup-steps {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .setup-steps h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .setup-steps ol {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .setup-steps li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .setup-steps code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .config-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .config-section strong {
+            color: #856404;
         }
 
         /* Buttons */
@@ -97,6 +140,12 @@
 
         .btn:active {
             transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-secondary {
@@ -385,10 +434,43 @@
             border-left: 4px solid #dc3545;
         }
 
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
         .alert-info {
             background: #d1ecf1;
             color: #0c5460;
             border-left: 4px solid #17a2b8;
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-ready {
+            background: #28a745;
+        }
+
+        .status-loading {
+            background: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-error {
+            background: #dc3545;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         /* Utility Classes */
@@ -437,6 +519,10 @@
                 padding: 25px 20px;
                 margin: 20px auto;
             }
+
+            .auth-container {
+                padding: 25px;
+            }
         }
     </style>
 </head>
@@ -444,18 +530,63 @@
     <!-- Auth Screen -->
     <div id="auth-screen" class="auth-container">
         <h2>📊 Check Register Pro</h2>
-        <p>Manage your finances with ease. Sign in with Google to access your check register backed by Google Sheets.</p>
-        <p><strong>Setup Instructions:</strong></p>
-        <ol style="text-align: left; margin: 20px 0; color: #666;">
-            <li>Click "Sign in with Google" below</li>
-            <li>Grant permission to access Google Sheets</li>
-            <li>Create or select your spreadsheet</li>
-            <li>Start tracking your transactions!</li>
-        </ol>
-        <button id="auth-button" class="btn" onclick="handleAuth()">
-            Sign in with Google
-        </button>
-        <div id="auth-error" class="alert alert-error hidden mt-20" style="text-align: left;"></div>
+        
+        <div class="config-section">
+            <strong>⚠️ Configuration Required</strong>
+            <p style="margin-top: 10px; color: #856404;">
+                Before you can use this application, you need to set up Google API credentials.
+                Follow the setup instructions below.
+            </p>
+        </div>
+
+        <div class="setup-steps">
+            <h3>🔧 Setup Instructions</h3>
+            <ol>
+                <li>Go to <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a></li>
+                <li>Create a new project or select an existing one</li>
+                <li>Enable the <strong>Google Sheets API</strong>:
+                    <ul style="margin-top: 5px;">
+                        <li>APIs & Services → Library</li>
+                        <li>Search for "Google Sheets API" and enable it</li>
+                    </ul>
+                </li>
+                <li>Create credentials:
+                    <ul style="margin-top: 5px;">
+                        <li>APIs & Services → Credentials</li>
+                        <li>Click "+ CREATE CREDENTIALS" → API Key</li>
+                        <li>Copy the API Key</li>
+                        <li>Click "+ CREATE CREDENTIALS" → OAuth client ID</li>
+                        <li>Application type: Web application</li>
+                        <li>Add authorized JavaScript origins: <code>http://localhost</code> or your domain</li>
+                        <li>Copy the Client ID</li>
+                    </ul>
+                </li>
+                <li>Open this HTML file in a text editor</li>
+                <li>Find the CONFIG section (around line 610)</li>
+                <li>Replace <code>YOUR_GOOGLE_CLIENT_ID</code> with your Client ID</li>
+                <li>Replace <code>YOUR_GOOGLE_API_KEY</code> with your API Key</li>
+                <li>Save the file and refresh this page</li>
+            </ol>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <div id="init-status" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                    <span class="status-indicator status-loading" id="gapi-status"></span>
+                    <span id="gapi-text">Initializing Google API...</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <span class="status-indicator status-loading" id="gis-status"></span>
+                    <span id="gis-text">Initializing Google Identity...</span>
+                </div>
+            </div>
+            <button id="auth-button" class="btn" onclick="handleAuth()" disabled>
+                Sign in with Google
+            </button>
+        </div>
+
+        <div id="auth-error" class="alert alert-error hidden"></div>
+        <div id="auth-info" class="alert alert-info hidden"></div>
     </div>
 
     <!-- Main App Screen -->
@@ -465,6 +596,7 @@
             <div class="header">
                 <div class="user-info">
                     <div class="user-email" id="user-email"></div>
+                    <div style="font-size: 0.85em; color: #999; margin-bottom: 5px;" id="spreadsheet-info"></div>
                     <button class="btn btn-secondary btn-small" onclick="handleSignOut()">Sign Out</button>
                 </div>
                 <h1>📊 Check Register Pro</h1>
@@ -698,20 +830,29 @@
         </div>
     </div>
 
-    <!-- Google API Script -->
+    <!-- Google API Scripts - Load these first -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
 
     <script>
-        // Configuration
+        // ============================================================================
+        // CONFIGURATION - REPLACE THESE VALUES WITH YOUR CREDENTIALS
+        // ============================================================================
         const CONFIG = {
-            CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID', // Replace with your Google Cloud Project Client ID
-            API_KEY: 'YOUR_GOOGLE_API_KEY',     // Replace with your Google Cloud Project API Key
+            CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID',  // Replace with your OAuth 2.0 Client ID
+            API_KEY: 'YOUR_GOOGLE_API_KEY',      // Replace with your API Key
             DISCOVERY_DOC: 'https://sheets.googleapis.com/$discovery/rest?version=v4',
             SCOPES: 'https://www.googleapis.com/auth/spreadsheets'
         };
 
-        // Global State
+        // Check if credentials are configured
+        const isConfigured = 
+            CONFIG.CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID' && 
+            CONFIG.API_KEY !== 'YOUR_GOOGLE_API_KEY';
+
+        // ============================================================================
+        // GLOBAL STATE
+        // ============================================================================
         let tokenClient;
         let gapiInited = false;
         let gisInited = false;
@@ -725,14 +866,58 @@
         let transactions = [];
         let editingTransaction = null;
 
-        // Initialize on load
-        window.addEventListener('load', () => {
-            gapiLoaded();
-            gisLoaded();
-        });
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+        
+        // Wait for scripts to load
+        let scriptsLoadAttempts = 0;
+        const maxAttempts = 50;
+
+        function waitForScripts() {
+            scriptsLoadAttempts++;
+            
+            if (typeof gapi !== 'undefined' && typeof google !== 'undefined') {
+                console.log('✓ Scripts loaded successfully');
+                gapiLoaded();
+                gisLoaded();
+            } else if (scriptsLoadAttempts < maxAttempts) {
+                setTimeout(waitForScripts, 100);
+            } else {
+                showAuthError('Failed to load Google API scripts. Please check your internet connection and refresh the page.');
+                updateStatus('gapi', 'error', 'Failed to load');
+                updateStatus('gis', 'error', 'Failed to load');
+            }
+        }
+
+        // Start checking when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForScripts);
+        } else {
+            waitForScripts();
+        }
+
+        // Update status indicators
+        function updateStatus(type, status, text) {
+            const statusEl = document.getElementById(`${type}-status`);
+            const textEl = document.getElementById(`${type}-text`);
+            
+            statusEl.className = `status-indicator status-${status}`;
+            textEl.textContent = text;
+        }
 
         // Initialize Google API
         function gapiLoaded() {
+            console.log('Initializing Google API...');
+            updateStatus('gapi', 'loading', 'Loading Google API...');
+            
+            if (!isConfigured) {
+                updateStatus('gapi', 'error', 'API Key not configured');
+                updateStatus('gis', 'error', 'Client ID not configured');
+                showAuthError('Please configure your Google API credentials in the code. See setup instructions above.');
+                return;
+            }
+
             gapi.load('client', initializeGapiClient);
         }
 
@@ -742,39 +927,88 @@
                     apiKey: CONFIG.API_KEY,
                     discoveryDocs: [CONFIG.DISCOVERY_DOC]
                 });
+                
                 gapiInited = true;
-                console.log('Google API initialized');
+                console.log('✓ Google API initialized');
+                updateStatus('gapi', 'ready', 'Google API Ready');
+                checkIfReady();
             } catch (err) {
-                console.error('Error initializing Google API:', err);
-                showAuthError('Failed to initialize Google API. Check console for details.');
+                console.error('Google API initialization error:', err);
+                updateStatus('gapi', 'error', 'API initialization failed');
+                
+                let errorMsg = 'Failed to initialize Google API. ';
+                if (err.message) {
+                    errorMsg += err.message;
+                }
+                
+                if (err.message && err.message.includes('API key')) {
+                    errorMsg += ' Please check that your API Key is correct and the Google Sheets API is enabled in your Google Cloud project.';
+                }
+                
+                showAuthError(errorMsg);
             }
         }
 
         // Initialize Google Identity Services
         function gisLoaded() {
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CONFIG.CLIENT_ID,
-                scope: CONFIG.SCOPES,
-                callback: ''
-            });
-            gisInited = true;
-            console.log('Google Identity Services initialized');
+            console.log('Initializing Google Identity Services...');
+            updateStatus('gis', 'loading', 'Loading Google Identity...');
+            
+            if (!isConfigured) {
+                return;
+            }
+
+            try {
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CONFIG.CLIENT_ID,
+                    scope: CONFIG.SCOPES,
+                    callback: ''
+                });
+                
+                gisInited = true;
+                console.log('✓ Google Identity Services initialized');
+                updateStatus('gis', 'ready', 'Google Identity Ready');
+                checkIfReady();
+            } catch (err) {
+                console.error('Google Identity Services error:', err);
+                updateStatus('gis', 'error', 'Identity initialization failed');
+                
+                let errorMsg = 'Failed to initialize Google Identity Services. ';
+                if (err.message) {
+                    errorMsg += err.message + ' ';
+                }
+                errorMsg += 'Please check that your Client ID is correct.';
+                
+                showAuthError(errorMsg);
+            }
         }
 
-        // Authentication
+        function checkIfReady() {
+            if (gapiInited && gisInited) {
+                document.getElementById('auth-button').disabled = false;
+                showAuthInfo('✓ Ready to sign in! Click the button above to get started.');
+            }
+        }
+
+        // ============================================================================
+        // AUTHENTICATION
+        // ============================================================================
+        
         function handleAuth() {
             if (!gapiInited || !gisInited) {
-                showAuthError('Google services not ready. Please refresh and try again.');
+                showAuthError('Google services not ready. Please wait and try again.');
                 return;
             }
 
             tokenClient.callback = async (resp) => {
                 if (resp.error !== undefined) {
-                    showAuthError(resp.error);
+                    console.error('Auth error:', resp);
+                    showAuthError('Authentication failed: ' + resp.error);
                     return;
                 }
                 
                 accessToken = gapi.client.getToken().access_token;
+                console.log('✓ Authentication successful');
                 await onSignIn();
             };
 
@@ -806,7 +1040,7 @@
                 await loadAllData();
             } catch (err) {
                 console.error('Sign in error:', err);
-                showAuthError('Failed to complete sign in. Please try again.');
+                showAuthError('Failed to complete sign in: ' + err.message);
             }
         }
 
@@ -823,26 +1057,40 @@
             
             document.getElementById('auth-screen').classList.remove('hidden');
             document.getElementById('app-screen').classList.add('hidden');
+            location.reload(); // Refresh to reset state
         }
 
         function showAuthError(message) {
             const errorDiv = document.getElementById('auth-error');
-            errorDiv.textContent = message;
+            errorDiv.innerHTML = '<strong>Error:</strong> ' + message;
             errorDiv.classList.remove('hidden');
+            
+            const infoDiv = document.getElementById('auth-info');
+            infoDiv.classList.add('hidden');
         }
 
-        // Spreadsheet Initialization
+        function showAuthInfo(message) {
+            const infoDiv = document.getElementById('auth-info');
+            infoDiv.textContent = message;
+            infoDiv.classList.remove('hidden');
+        }
+
+        // ============================================================================
+        // SPREADSHEET INITIALIZATION
+        // ============================================================================
+        
         async function initializeSpreadsheet() {
             // Check localStorage for existing spreadsheet
             const savedId = localStorage.getItem('checkRegisterSpreadsheetId');
             
             if (savedId) {
-                // Verify it still exists
                 try {
                     await gapi.client.sheets.spreadsheets.get({
                         spreadsheetId: savedId
                     });
                     spreadsheetId = savedId;
+                    document.getElementById('spreadsheet-info').textContent = `Spreadsheet ID: ${savedId.substring(0, 20)}...`;
+                    console.log('✓ Using existing spreadsheet:', savedId);
                     return;
                 } catch (err) {
                     console.log('Saved spreadsheet not found, creating new one');
@@ -861,66 +1109,106 @@
                         title: `Check Register - ${new Date().toLocaleDateString()}`
                     },
                     sheets: [
-                        { properties: { title: 'Accounts' } },
-                        { properties: { title: 'Categories' } },
-                        { properties: { title: 'Transactions' } }
+                        { properties: { title: 'Transactions', sheetId: 0 } },
+                        { properties: { title: 'Accounts', sheetId: 1 } },
+                        { properties: { title: 'Categories', sheetId: 2 } }
                     ]
                 });
                 
                 spreadsheetId = response.result.spreadsheetId;
                 localStorage.setItem('checkRegisterSpreadsheetId', spreadsheetId);
+                document.getElementById('spreadsheet-info').textContent = `Spreadsheet ID: ${spreadsheetId.substring(0, 20)}...`;
+                
+                console.log('✓ New spreadsheet created:', spreadsheetId);
                 
                 // Initialize sheets with headers
                 await initializeSheetHeaders();
                 
-                alert(`New spreadsheet created! ID: ${spreadsheetId}`);
+                alert(`✓ New spreadsheet created!\n\nYou can find it in Google Drive or access it directly:\nhttps://docs.google.com/spreadsheets/d/${spreadsheetId}`);
             } catch (err) {
                 console.error('Error creating spreadsheet:', err);
-                throw new Error('Failed to create spreadsheet');
+                throw new Error('Failed to create spreadsheet: ' + err.message);
             }
         }
 
         async function initializeSheetHeaders() {
-            const requests = [
-                {
-                    range: 'Accounts!A1:B1',
-                    values: [['Account Name', 'Balance']]
-                },
-                {
-                    range: 'Categories!A1',
-                    values: [['Category Name']]
-                },
-                {
-                    range: 'Transactions!A1:I1',
-                    values: [['Date', 'Account', 'Payee', 'Check Number', 'Category', 'Amount', 'Notes', 'Reconciled', 'ID']]
-                }
-            ];
-
-            for (const req of requests) {
-                await gapi.client.sheets.spreadsheets.values.update({
+            try {
+                // Initialize all sheets in one batch request
+                await gapi.client.sheets.spreadsheets.batchUpdate({
                     spreadsheetId: spreadsheetId,
-                    range: req.range,
-                    valueInputOption: 'RAW',
-                    resource: { values: req.values }
+                    resource: {
+                        requests: [
+                            {
+                                updateCells: {
+                                    range: { sheetId: 1, startRowIndex: 0, endRowIndex: 1 },
+                                    rows: [{
+                                        values: [
+                                            { userEnteredValue: { stringValue: 'Account Name' } },
+                                            { userEnteredValue: { stringValue: 'Balance' } }
+                                        ]
+                                    }],
+                                    fields: 'userEnteredValue'
+                                }
+                            },
+                            {
+                                updateCells: {
+                                    range: { sheetId: 2, startRowIndex: 0, endRowIndex: 1 },
+                                    rows: [{
+                                        values: [
+                                            { userEnteredValue: { stringValue: 'Category Name' } }
+                                        ]
+                                    }],
+                                    fields: 'userEnteredValue'
+                                }
+                            },
+                            {
+                                updateCells: {
+                                    range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1 },
+                                    rows: [{
+                                        values: [
+                                            { userEnteredValue: { stringValue: 'Date' } },
+                                            { userEnteredValue: { stringValue: 'Account' } },
+                                            { userEnteredValue: { stringValue: 'Payee' } },
+                                            { userEnteredValue: { stringValue: 'Check Number' } },
+                                            { userEnteredValue: { stringValue: 'Category' } },
+                                            { userEnteredValue: { stringValue: 'Amount' } },
+                                            { userEnteredValue: { stringValue: 'Notes' } },
+                                            { userEnteredValue: { stringValue: 'Reconciled' } },
+                                            { userEnteredValue: { stringValue: 'ID' } }
+                                        ]
+                                    }],
+                                    fields: 'userEnteredValue'
+                                }
+                            }
+                        ]
+                    }
                 });
+
+                // Add default categories
+                const defaultCategories = [
+                    ['Groceries'], ['Utilities'], ['Rent/Mortgage'], ['Transportation'], 
+                    ['Entertainment'], ['Healthcare'], ['Dining'], ['Shopping'], 
+                    ['Income'], ['Salary'], ['Transfer'], ['Other']
+                ];
+
+                await gapi.client.sheets.spreadsheets.values.append({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Categories!A2',
+                    valueInputOption: 'RAW',
+                    resource: { values: defaultCategories }
+                });
+
+                console.log('✓ Sheet headers initialized');
+            } catch (err) {
+                console.error('Error initializing headers:', err);
+                throw err;
             }
-
-            // Add some default categories
-            const defaultCategories = [
-                ['Groceries'], ['Utilities'], ['Rent/Mortgage'], ['Transportation'], 
-                ['Entertainment'], ['Healthcare'], ['Dining'], ['Shopping'], 
-                ['Income'], ['Transfer'], ['Other']
-            ];
-
-            await gapi.client.sheets.spreadsheets.values.append({
-                spreadsheetId: spreadsheetId,
-                range: 'Categories!A2',
-                valueInputOption: 'RAW',
-                resource: { values: defaultCategories }
-            });
         }
 
-        // Data Loading
+        // ============================================================================
+        // DATA LOADING
+        // ============================================================================
+        
         async function loadAllData() {
             try {
                 await Promise.all([
@@ -932,58 +1220,82 @@
                 renderTransactions();
             } catch (err) {
                 console.error('Error loading data:', err);
-                alert('Failed to load data. Please refresh the page.');
+                alert('Failed to load data: ' + err.message + '\n\nPlease refresh the page.');
             }
         }
 
         async function loadAccounts() {
-            const response = await gapi.client.sheets.spreadsheets.values.get({
-                spreadsheetId: spreadsheetId,
-                range: 'Accounts!A2:B'
-            });
-            
-            const rows = response.result.values || [];
-            accounts = rows.map(row => ({
-                name: row[0],
-                balance: parseFloat(row[1]) || 0
-            }));
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Accounts!A2:B'
+                });
+                
+                const rows = response.result.values || [];
+                accounts = rows.map(row => ({
+                    name: row[0],
+                    balance: parseFloat(row[1]) || 0
+                }));
+                
+                console.log(`✓ Loaded ${accounts.length} accounts`);
+            } catch (err) {
+                console.error('Error loading accounts:', err);
+                throw err;
+            }
         }
 
         async function loadCategories() {
-            const response = await gapi.client.sheets.spreadsheets.values.get({
-                spreadsheetId: spreadsheetId,
-                range: 'Categories!A2:A'
-            });
-            
-            const rows = response.result.values || [];
-            categories = rows.map(row => row[0]);
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Categories!A2:A'
+                });
+                
+                const rows = response.result.values || [];
+                categories = rows.map(row => row[0]);
+                
+                console.log(`✓ Loaded ${categories.length} categories`);
+            } catch (err) {
+                console.error('Error loading categories:', err);
+                throw err;
+            }
         }
 
         async function loadTransactions() {
-            const response = await gapi.client.sheets.spreadsheets.values.get({
-                spreadsheetId: spreadsheetId,
-                range: 'Transactions!A2:I'
-            });
-            
-            const rows = response.result.values || [];
-            transactions = rows.map((row, index) => ({
-                date: row[0] || '',
-                account: row[1] || '',
-                payee: row[2] || '',
-                checkNumber: row[3] || '',
-                category: row[4] || '',
-                amount: parseFloat(row[5]) || 0,
-                notes: row[6] || '',
-                reconciled: row[7] === 'Y',
-                id: row[8] || `txn_${Date.now()}_${index}`,
-                rowIndex: index + 2
-            }));
-            
-            // Sort by date descending
-            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Transactions!A2:I'
+                });
+                
+                const rows = response.result.values || [];
+                transactions = rows.map((row, index) => ({
+                    date: row[0] || '',
+                    account: row[1] || '',
+                    payee: row[2] || '',
+                    checkNumber: row[3] || '',
+                    category: row[4] || '',
+                    amount: parseFloat(row[5]) || 0,
+                    notes: row[6] || '',
+                    reconciled: row[7] === 'Y',
+                    id: row[8] || `txn_${Date.now()}_${index}`,
+                    rowIndex: index + 2
+                }));
+                
+                // Sort by date descending
+                transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                console.log(`✓ Loaded ${transactions.length} transactions`);
+            } catch (err) {
+                console.error('Error loading transactions:', err);
+                throw err;
+            }
         }
 
-        // Rendering
+        // ============================================================================
+        // RENDERING
+        // ============================================================================
+        
         function renderDashboard() {
             const dashboard = document.getElementById('dashboard');
             
@@ -1002,7 +1314,7 @@
                 const calculatedBalance = calculateAccountBalance(account.name);
                 
                 return `
-                    <div class="account-card" onclick="showAccountDetails('${account.name}')">
+                    <div class="account-card" onclick="showAccountDetails('${account.name.replace(/'/g, "\\'")}')">
                         <div class="account-name">${account.name}</div>
                         <div class="account-balance">$${calculatedBalance.toFixed(2)}</div>
                         <div class="account-stats">
@@ -1017,7 +1329,7 @@
 
         function renderTransactions(transactionsToShow = null) {
             const tbody = document.getElementById('transactions-tbody');
-            const txns = transactionsToShow || transactions.slice(0, 20); // Show last 20 by default
+            const txns = transactionsToShow || transactions.slice(0, 20);
             
             if (txns.length === 0) {
                 tbody.innerHTML = `
@@ -1046,14 +1358,17 @@
                         <td>${txn.reconciled ? '<span class="reconciled-badge">✓</span>' : '-'}</td>
                         <td>
                             <button class="btn btn-small" onclick='editTransactionById("${txn.id}")'>Edit</button>
-                            <button class="btn btn-danger btn-small" onclick='deleteTransaction("${txn.id}")'>Delete</button>
+                            <button class="btn btn-danger btn-small" onclick='deleteTransaction("${txn.id}")'>Del</button>
                         </td>
                     </tr>
                 `;
             }).join('');
         }
 
-        // Calculations
+        // ============================================================================
+        // CALCULATIONS
+        // ============================================================================
+        
         function calculateAccountBalance(accountName) {
             return transactions
                 .filter(t => t.account === accountName)
@@ -1061,9 +1376,6 @@
         }
 
         function calculateBalanceAtTransaction(transaction) {
-            const account = accounts.find(a => a.name === transaction.account);
-            if (!account) return 0;
-
             const accountTxns = transactions
                 .filter(t => t.account === transaction.account)
                 .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -1077,7 +1389,10 @@
             return balance;
         }
 
-        // Transaction Management
+        // ============================================================================
+        // TRANSACTION MANAGEMENT
+        // ============================================================================
+        
         function showAddTransaction() {
             editingTransaction = null;
             document.getElementById('transaction-modal-title').textContent = 'Add Transaction';
@@ -1180,10 +1495,10 @@
 
                 closeModal('transaction-modal');
                 await loadAllData();
-                alert('Transaction saved successfully!');
+                alert('✓ Transaction saved successfully!');
             } catch (err) {
                 console.error('Error saving transaction:', err);
-                alert('Failed to save transaction. Please try again.');
+                alert('Failed to save transaction: ' + err.message);
             }
         }
 
@@ -1194,13 +1509,21 @@
             if (!txn) return;
 
             try {
+                // Get sheet metadata to find the correct sheet ID
+                const metadata = await gapi.client.sheets.spreadsheets.get({
+                    spreadsheetId: spreadsheetId
+                });
+                
+                const transactionsSheet = metadata.result.sheets.find(s => s.properties.title === 'Transactions');
+                const sheetId = transactionsSheet.properties.sheetId;
+
                 await gapi.client.sheets.spreadsheets.batchUpdate({
                     spreadsheetId: spreadsheetId,
                     resource: {
                         requests: [{
                             deleteDimension: {
                                 range: {
-                                    sheetId: 0, // Assumes Transactions is first sheet
+                                    sheetId: sheetId,
                                     dimension: 'ROWS',
                                     startIndex: txn.rowIndex - 1,
                                     endIndex: txn.rowIndex
@@ -1211,19 +1534,21 @@
                 });
 
                 await loadAllData();
-                alert('Transaction deleted successfully!');
+                alert('✓ Transaction deleted successfully!');
             } catch (err) {
                 console.error('Error deleting transaction:', err);
-                alert('Failed to delete transaction. Please try again.');
+                alert('Failed to delete transaction: ' + err.message);
             }
         }
 
-        // Search
+        // ============================================================================
+        // SEARCH
+        // ============================================================================
+        
         function showSearch() {
             populateAccountSelect('search-account');
             populateCategorySelect('search-category');
             
-            // Set default date range (last 30 days)
             const endDate = new Date();
             const startDate = new Date();
             startDate.setDate(startDate.getDate() - 30);
@@ -1316,7 +1641,10 @@
             performSearch();
         }
 
-        // Reconciliation
+        // ============================================================================
+        // RECONCILIATION
+        // ============================================================================
+        
         function showReconcile() {
             populateAccountSelect('reconcile-account');
             document.getElementById('reconcile-modal').style.display = 'block';
@@ -1401,14 +1729,17 @@
 
                 closeModal('reconcile-modal');
                 await loadAllData();
-                alert(`${idsToReconcile.length} transaction${idsToReconcile.length !== 1 ? 's' : ''} reconciled successfully!`);
+                alert(`✓ ${idsToReconcile.length} transaction${idsToReconcile.length !== 1 ? 's' : ''} reconciled!`);
             } catch (err) {
                 console.error('Error reconciling:', err);
-                alert('Failed to reconcile transactions. Please try again.');
+                alert('Failed to reconcile: ' + err.message);
             }
         }
 
-        // Account Management
+        // ============================================================================
+        // ACCOUNT MANAGEMENT
+        // ============================================================================
+        
         function showManageAccounts() {
             document.getElementById('manage-modal').style.display = 'block';
         }
@@ -1434,10 +1765,10 @@
                 document.getElementById('new-account-balance').value = '';
                 
                 await loadAllData();
-                alert('Account added successfully!');
+                alert('✓ Account added successfully!');
             } catch (err) {
                 console.error('Error adding account:', err);
-                alert('Failed to add account. Please try again.');
+                alert('Failed to add account: ' + err.message);
             }
         }
 
@@ -1460,14 +1791,17 @@
                 document.getElementById('new-category-name').value = '';
                 
                 await loadCategories();
-                alert('Category added successfully!');
+                alert('✓ Category added successfully!');
             } catch (err) {
                 console.error('Error adding category:', err);
-                alert('Failed to add category. Please try again.');
+                alert('Failed to add category: ' + err.message);
             }
         }
 
-        // Account Details
+        // ============================================================================
+        // ACCOUNT DETAILS
+        // ============================================================================
+        
         function showAccountDetails(accountName) {
             const accountTxns = transactions
                 .filter(t => t.account === accountName)
@@ -1514,7 +1848,10 @@
             document.getElementById('account-modal').style.display = 'block';
         }
 
-        // Utility Functions
+        // ============================================================================
+        // UTILITY FUNCTIONS
+        // ============================================================================
+        
         function populateAccountSelect(selectId, selectedValue = '') {
             const select = document.getElementById(selectId);
             select.innerHTML = '<option value="">Select Account</option>' +
@@ -1533,7 +1870,7 @@
 
         async function refreshData() {
             await loadAllData();
-            alert('Data refreshed!');
+            alert('✓ Data refreshed!');
         }
 
         // Close modals on outside click
