@@ -1,22 +1,1547 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Step2</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Register Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .user-info {
+            float: right;
+            text-align: right;
+        }
+
+        .user-email {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        /* Auth Section */
+        .auth-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            margin: 100px auto;
+        }
+
+        .auth-container h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .auth-container p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        /* Buttons */
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .account-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+
+        .account-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .account-card .account-name {
+            font-size: 0.95em;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .account-card .account-balance {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .account-card .account-stats {
+            margin-top: 15px;
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        /* Main Content */
+        .main-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .toolbar-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Form Elements */
+        input, select, textarea {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .amount-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .amount-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .reconciled-badge {
+            background: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 35px;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-header h2 {
+            color: #667eea;
+            font-size: 1.6em;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .user-info {
+                float: none;
+                text-align: left;
+                margin-top: 15px;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .toolbar-section {
+                width: 100%;
+            }
+
+            .account-card .account-balance {
+                font-size: 1.5em;
+            }
+
+            .modal-content {
+                padding: 25px 20px;
+                margin: 20px auto;
+            }
+        }
+    </style>
 </head>
-
 <body>
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-container">
+        <h2>📊 Check Register Pro</h2>
+        <p>Manage your finances with ease. Sign in with Google to access your check register backed by Google Sheets.</p>
+        <p><strong>Setup Instructions:</strong></p>
+        <ol style="text-align: left; margin: 20px 0; color: #666;">
+            <li>Click "Sign in with Google" below</li>
+            <li>Grant permission to access Google Sheets</li>
+            <li>Create or select your spreadsheet</li>
+            <li>Start tracking your transactions!</li>
+        </ol>
+        <button id="auth-button" class="btn" onclick="handleAuth()">
+            Sign in with Google
+        </button>
+        <div id="auth-error" class="alert alert-error hidden mt-20" style="text-align: left;"></div>
+    </div>
 
-<h1>JCR</h1>
-<button id="b">Click</button>
+    <!-- Main App Screen -->
+    <div id="app-screen" class="hidden">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="user-info">
+                    <div class="user-email" id="user-email"></div>
+                    <button class="btn btn-secondary btn-small" onclick="handleSignOut()">Sign Out</button>
+                </div>
+                <h1>📊 Check Register Pro</h1>
+                <p class="subtitle">Track your finances with precision</p>
+            </div>
 
-<script>
-console.log("JS loaded");
+            <!-- Account Dashboard -->
+            <div id="dashboard" class="dashboard"></div>
 
-document.getElementById("b").onclick = function(){
-  alert("Button works");
-};
-</script>
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="toolbar">
+                    <div class="toolbar-section">
+                        <button class="btn" onclick="showAddTransaction()">➕ Add Transaction</button>
+                        <button class="btn btn-secondary" onclick="showSearch()">🔍 Search</button>
+                        <button class="btn btn-secondary" onclick="showReconcile()">✓ Reconcile</button>
+                    </div>
+                    <div class="toolbar-section">
+                        <button class="btn btn-secondary" onclick="showManageAccounts()">⚙️ Manage</button>
+                        <button class="btn btn-success" onclick="refreshData()">🔄 Refresh</button>
+                    </div>
+                </div>
 
+                <div id="recent-transactions">
+                    <h3 style="margin-bottom: 20px; color: #333;">Recent Transactions</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Account</th>
+                                    <th>Payee</th>
+                                    <th>Check #</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-tbody">
+                                <tr>
+                                    <td colspan="9" class="text-center">
+                                        <div class="loading">
+                                            <div class="spinner"></div>
+                                            Loading transactions...
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Transaction Modal -->
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('transaction-modal')">&times;</button>
+            <div class="modal-header">
+                <h2 id="transaction-modal-title">Add Transaction</h2>
+            </div>
+            <form id="transaction-form" onsubmit="saveTransaction(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date *</label>
+                        <input type="date" id="txn-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Account *</label>
+                        <select id="txn-account" required></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Payee *</label>
+                    <input type="text" id="txn-payee" required placeholder="Who did you pay or receive from?">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Check Number</label>
+                        <input type="text" id="txn-check" placeholder="Optional">
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select id="txn-category" required></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount *</label>
+                        <input type="number" id="txn-amount" step="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Type *</label>
+                        <select id="txn-type" required>
+                            <option value="debit">Payment (Debit)</option>
+                            <option value="credit">Deposit (Credit)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="txn-notes" rows="3" placeholder="Optional notes"></textarea>
+                </div>
+                <div class="toolbar-section" style="margin-top: 25px;">
+                    <button type="submit" class="btn">💾 Save Transaction</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('transaction-modal')">Cancel</button>
+                </div>
+                <input type="hidden" id="txn-id">
+            </form>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div id="search-modal" class="modal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <button class="close-btn" onclick="closeModal('search-modal')">&times;</button>
+            <div class="modal-header">
+                <h2>🔍 Search Transactions</h2>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Date</label>
+                    <input type="date" id="search-start-date">
+                </div>
+                <div class="form-group">
+                    <label>End Date</label>
+                    <input type="date" id="search-end-date">
+                </div>
+                <div class="form-group">
+                    <label>Account</label>
+                    <select id="search-account">
+                        <option value="">All Accounts</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Payee</label>
+                    <input type="text" id="search-payee" placeholder="Search by payee">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="search-category">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="search-reconciled">
+                        <option value="">All</option>
+                        <option value="Y">Reconciled</option>
+                        <option value="N">Not Reconciled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="toolbar-section mb-20">
+                <button class="btn" onclick="performSearch()">Search</button>
+                <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
+            </div>
+            <div id="search-results"></div>
+        </div>
+    </div>
+
+    <!-- Reconcile Modal -->
+    <div id="reconcile-modal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <button class="close-btn" onclick="closeModal('reconcile-modal')">&times;</button>
+            <div class="modal-header">
+                <h2>✓ Reconcile Account</h2>
+            </div>
+            <div class="form-group">
+                <label>Account</label>
+                <select id="reconcile-account" onchange="loadReconcileTransactions()"></select>
+            </div>
+            <div class="form-group">
+                <label>Statement Ending Balance</label>
+                <input type="number" id="reconcile-balance" step="0.01" placeholder="0.00">
+            </div>
+            <div id="reconcile-transactions"></div>
+            <div class="toolbar-section mt-20">
+                <button class="btn btn-success" onclick="saveReconciliation()">Save Reconciliation</button>
+                <button class="btn btn-secondary" onclick="closeModal('reconcile-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Accounts/Categories Modal -->
+    <div id="manage-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('manage-modal')">&times;</button>
+            <div class="modal-header">
+                <h2>⚙️ Manage Accounts & Categories</h2>
+            </div>
+            
+            <h3 style="margin-bottom: 15px; color: #667eea;">Accounts</h3>
+            <div class="form-row mb-20">
+                <div class="form-group">
+                    <input type="text" id="new-account-name" placeholder="Account name">
+                </div>
+                <div class="form-group">
+                    <input type="number" id="new-account-balance" step="0.01" placeholder="Initial balance">
+                </div>
+                <div class="form-group">
+                    <button class="btn" onclick="addAccount()">Add Account</button>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 15px; color: #667eea;">Categories</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <input type="text" id="new-category-name" placeholder="Category name">
+                </div>
+                <div class="form-group">
+                    <button class="btn" onclick="addCategory()">Add Category</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Details Modal -->
+    <div id="account-modal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <button class="close-btn" onclick="closeModal('account-modal')">&times;</button>
+            <div class="modal-header">
+                <h2 id="account-modal-title">Account Details</h2>
+            </div>
+            <div id="account-details"></div>
+        </div>
+    </div>
+
+    <!-- Google API Script -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID', // Replace with your Google Cloud Project Client ID
+            API_KEY: 'YOUR_GOOGLE_API_KEY',     // Replace with your Google Cloud Project API Key
+            DISCOVERY_DOC: 'https://sheets.googleapis.com/$discovery/rest?version=v4',
+            SCOPES: 'https://www.googleapis.com/auth/spreadsheets'
+        };
+
+        // Global State
+        let tokenClient;
+        let gapiInited = false;
+        let gisInited = false;
+        let accessToken = null;
+        let currentUser = null;
+        let spreadsheetId = null;
+        
+        // Data Storage
+        let accounts = [];
+        let categories = [];
+        let transactions = [];
+        let editingTransaction = null;
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            gapiLoaded();
+            gisLoaded();
+        });
+
+        // Initialize Google API
+        function gapiLoaded() {
+            gapi.load('client', initializeGapiClient);
+        }
+
+        async function initializeGapiClient() {
+            try {
+                await gapi.client.init({
+                    apiKey: CONFIG.API_KEY,
+                    discoveryDocs: [CONFIG.DISCOVERY_DOC]
+                });
+                gapiInited = true;
+                console.log('Google API initialized');
+            } catch (err) {
+                console.error('Error initializing Google API:', err);
+                showAuthError('Failed to initialize Google API. Check console for details.');
+            }
+        }
+
+        // Initialize Google Identity Services
+        function gisLoaded() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CONFIG.CLIENT_ID,
+                scope: CONFIG.SCOPES,
+                callback: ''
+            });
+            gisInited = true;
+            console.log('Google Identity Services initialized');
+        }
+
+        // Authentication
+        function handleAuth() {
+            if (!gapiInited || !gisInited) {
+                showAuthError('Google services not ready. Please refresh and try again.');
+                return;
+            }
+
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    showAuthError(resp.error);
+                    return;
+                }
+                
+                accessToken = gapi.client.getToken().access_token;
+                await onSignIn();
+            };
+
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({ prompt: 'consent' });
+            } else {
+                tokenClient.requestAccessToken({ prompt: '' });
+            }
+        }
+
+        async function onSignIn() {
+            try {
+                // Get user info
+                const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                }).then(r => r.json());
+                
+                currentUser = userInfo;
+                document.getElementById('user-email').textContent = userInfo.email;
+                
+                // Check for existing spreadsheet or create new one
+                await initializeSpreadsheet();
+                
+                // Show app
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                
+                // Load data
+                await loadAllData();
+            } catch (err) {
+                console.error('Sign in error:', err);
+                showAuthError('Failed to complete sign in. Please try again.');
+            }
+        }
+
+        function handleSignOut() {
+            const token = gapi.client.getToken();
+            if (token !== null) {
+                google.accounts.oauth2.revoke(token.access_token);
+                gapi.client.setToken('');
+            }
+            
+            accessToken = null;
+            currentUser = null;
+            spreadsheetId = null;
+            
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('app-screen').classList.add('hidden');
+        }
+
+        function showAuthError(message) {
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Spreadsheet Initialization
+        async function initializeSpreadsheet() {
+            // Check localStorage for existing spreadsheet
+            const savedId = localStorage.getItem('checkRegisterSpreadsheetId');
+            
+            if (savedId) {
+                // Verify it still exists
+                try {
+                    await gapi.client.sheets.spreadsheets.get({
+                        spreadsheetId: savedId
+                    });
+                    spreadsheetId = savedId;
+                    return;
+                } catch (err) {
+                    console.log('Saved spreadsheet not found, creating new one');
+                    localStorage.removeItem('checkRegisterSpreadsheetId');
+                }
+            }
+            
+            // Create new spreadsheet
+            await createNewSpreadsheet();
+        }
+
+        async function createNewSpreadsheet() {
+            try {
+                const response = await gapi.client.sheets.spreadsheets.create({
+                    properties: {
+                        title: `Check Register - ${new Date().toLocaleDateString()}`
+                    },
+                    sheets: [
+                        { properties: { title: 'Accounts' } },
+                        { properties: { title: 'Categories' } },
+                        { properties: { title: 'Transactions' } }
+                    ]
+                });
+                
+                spreadsheetId = response.result.spreadsheetId;
+                localStorage.setItem('checkRegisterSpreadsheetId', spreadsheetId);
+                
+                // Initialize sheets with headers
+                await initializeSheetHeaders();
+                
+                alert(`New spreadsheet created! ID: ${spreadsheetId}`);
+            } catch (err) {
+                console.error('Error creating spreadsheet:', err);
+                throw new Error('Failed to create spreadsheet');
+            }
+        }
+
+        async function initializeSheetHeaders() {
+            const requests = [
+                {
+                    range: 'Accounts!A1:B1',
+                    values: [['Account Name', 'Balance']]
+                },
+                {
+                    range: 'Categories!A1',
+                    values: [['Category Name']]
+                },
+                {
+                    range: 'Transactions!A1:I1',
+                    values: [['Date', 'Account', 'Payee', 'Check Number', 'Category', 'Amount', 'Notes', 'Reconciled', 'ID']]
+                }
+            ];
+
+            for (const req of requests) {
+                await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: spreadsheetId,
+                    range: req.range,
+                    valueInputOption: 'RAW',
+                    resource: { values: req.values }
+                });
+            }
+
+            // Add some default categories
+            const defaultCategories = [
+                ['Groceries'], ['Utilities'], ['Rent/Mortgage'], ['Transportation'], 
+                ['Entertainment'], ['Healthcare'], ['Dining'], ['Shopping'], 
+                ['Income'], ['Transfer'], ['Other']
+            ];
+
+            await gapi.client.sheets.spreadsheets.values.append({
+                spreadsheetId: spreadsheetId,
+                range: 'Categories!A2',
+                valueInputOption: 'RAW',
+                resource: { values: defaultCategories }
+            });
+        }
+
+        // Data Loading
+        async function loadAllData() {
+            try {
+                await Promise.all([
+                    loadAccounts(),
+                    loadCategories(),
+                    loadTransactions()
+                ]);
+                renderDashboard();
+                renderTransactions();
+            } catch (err) {
+                console.error('Error loading data:', err);
+                alert('Failed to load data. Please refresh the page.');
+            }
+        }
+
+        async function loadAccounts() {
+            const response = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: spreadsheetId,
+                range: 'Accounts!A2:B'
+            });
+            
+            const rows = response.result.values || [];
+            accounts = rows.map(row => ({
+                name: row[0],
+                balance: parseFloat(row[1]) || 0
+            }));
+        }
+
+        async function loadCategories() {
+            const response = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: spreadsheetId,
+                range: 'Categories!A2:A'
+            });
+            
+            const rows = response.result.values || [];
+            categories = rows.map(row => row[0]);
+        }
+
+        async function loadTransactions() {
+            const response = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: spreadsheetId,
+                range: 'Transactions!A2:I'
+            });
+            
+            const rows = response.result.values || [];
+            transactions = rows.map((row, index) => ({
+                date: row[0] || '',
+                account: row[1] || '',
+                payee: row[2] || '',
+                checkNumber: row[3] || '',
+                category: row[4] || '',
+                amount: parseFloat(row[5]) || 0,
+                notes: row[6] || '',
+                reconciled: row[7] === 'Y',
+                id: row[8] || `txn_${Date.now()}_${index}`,
+                rowIndex: index + 2
+            }));
+            
+            // Sort by date descending
+            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        // Rendering
+        function renderDashboard() {
+            const dashboard = document.getElementById('dashboard');
+            
+            if (accounts.length === 0) {
+                dashboard.innerHTML = `
+                    <div class="account-card" style="grid-column: 1/-1; text-align: center; cursor: default;">
+                        <p style="color: #666; margin-bottom: 15px;">No accounts yet. Add your first account to get started!</p>
+                        <button class="btn" onclick="showManageAccounts()">Add Account</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const accountsHTML = accounts.map(account => {
+                const accountTransactions = transactions.filter(t => t.account === account.name);
+                const calculatedBalance = calculateAccountBalance(account.name);
+                
+                return `
+                    <div class="account-card" onclick="showAccountDetails('${account.name}')">
+                        <div class="account-name">${account.name}</div>
+                        <div class="account-balance">$${calculatedBalance.toFixed(2)}</div>
+                        <div class="account-stats">
+                            ${accountTransactions.length} transaction${accountTransactions.length !== 1 ? 's' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            dashboard.innerHTML = accountsHTML;
+        }
+
+        function renderTransactions(transactionsToShow = null) {
+            const tbody = document.getElementById('transactions-tbody');
+            const txns = transactionsToShow || transactions.slice(0, 20); // Show last 20 by default
+            
+            if (txns.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center" style="padding: 40px;">
+                            No transactions found. Click "Add Transaction" to get started!
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = txns.map(txn => {
+                const balance = calculateBalanceAtTransaction(txn);
+                return `
+                    <tr>
+                        <td>${txn.date}</td>
+                        <td>${txn.account}</td>
+                        <td>${txn.payee}</td>
+                        <td>${txn.checkNumber || '-'}</td>
+                        <td>${txn.category}</td>
+                        <td class="${txn.amount >= 0 ? 'amount-positive' : 'amount-negative'}">
+                            ${txn.amount >= 0 ? '+' : ''}$${Math.abs(txn.amount).toFixed(2)}
+                        </td>
+                        <td>$${balance.toFixed(2)}</td>
+                        <td>${txn.reconciled ? '<span class="reconciled-badge">✓</span>' : '-'}</td>
+                        <td>
+                            <button class="btn btn-small" onclick='editTransactionById("${txn.id}")'>Edit</button>
+                            <button class="btn btn-danger btn-small" onclick='deleteTransaction("${txn.id}")'>Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Calculations
+        function calculateAccountBalance(accountName) {
+            return transactions
+                .filter(t => t.account === accountName)
+                .reduce((sum, t) => sum + t.amount, 0);
+        }
+
+        function calculateBalanceAtTransaction(transaction) {
+            const account = accounts.find(a => a.name === transaction.account);
+            if (!account) return 0;
+
+            const accountTxns = transactions
+                .filter(t => t.account === transaction.account)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            let balance = 0;
+            for (const txn of accountTxns) {
+                balance += txn.amount;
+                if (txn.id === transaction.id) break;
+            }
+
+            return balance;
+        }
+
+        // Transaction Management
+        function showAddTransaction() {
+            editingTransaction = null;
+            document.getElementById('transaction-modal-title').textContent = 'Add Transaction';
+            document.getElementById('transaction-form').reset();
+            document.getElementById('txn-date').valueAsDate = new Date();
+            document.getElementById('txn-id').value = '';
+            
+            populateAccountSelect('txn-account');
+            populateCategorySelect('txn-category');
+            
+            document.getElementById('transaction-modal').style.display = 'block';
+        }
+
+        function editTransactionById(id) {
+            const txn = transactions.find(t => t.id === id);
+            if (!txn) return;
+            
+            editingTransaction = txn;
+            document.getElementById('transaction-modal-title').textContent = 'Edit Transaction';
+            
+            document.getElementById('txn-date').value = txn.date;
+            document.getElementById('txn-payee').value = txn.payee;
+            document.getElementById('txn-check').value = txn.checkNumber;
+            document.getElementById('txn-amount').value = Math.abs(txn.amount);
+            document.getElementById('txn-type').value = txn.amount >= 0 ? 'credit' : 'debit';
+            document.getElementById('txn-notes').value = txn.notes;
+            document.getElementById('txn-id').value = txn.id;
+            
+            populateAccountSelect('txn-account', txn.account);
+            populateCategorySelect('txn-category', txn.category);
+            
+            document.getElementById('transaction-modal').style.display = 'block';
+        }
+
+        async function saveTransaction(event) {
+            event.preventDefault();
+            
+            const formData = {
+                date: document.getElementById('txn-date').value,
+                account: document.getElementById('txn-account').value,
+                payee: document.getElementById('txn-payee').value,
+                checkNumber: document.getElementById('txn-check').value,
+                category: document.getElementById('txn-category').value,
+                amount: parseFloat(document.getElementById('txn-amount').value),
+                type: document.getElementById('txn-type').value,
+                notes: document.getElementById('txn-notes').value,
+                id: document.getElementById('txn-id').value || `txn_${Date.now()}`
+            };
+
+            // Adjust amount based on type
+            if (formData.type === 'debit') {
+                formData.amount = -Math.abs(formData.amount);
+            } else {
+                formData.amount = Math.abs(formData.amount);
+            }
+
+            try {
+                if (editingTransaction) {
+                    // Update existing
+                    await gapi.client.sheets.spreadsheets.values.update({
+                        spreadsheetId: spreadsheetId,
+                        range: `Transactions!A${editingTransaction.rowIndex}:I${editingTransaction.rowIndex}`,
+                        valueInputOption: 'RAW',
+                        resource: {
+                            values: [[
+                                formData.date,
+                                formData.account,
+                                formData.payee,
+                                formData.checkNumber,
+                                formData.category,
+                                formData.amount,
+                                formData.notes,
+                                editingTransaction.reconciled ? 'Y' : 'N',
+                                formData.id
+                            ]]
+                        }
+                    });
+                } else {
+                    // Add new
+                    await gapi.client.sheets.spreadsheets.values.append({
+                        spreadsheetId: spreadsheetId,
+                        range: 'Transactions!A2',
+                        valueInputOption: 'RAW',
+                        insertDataOption: 'INSERT_ROWS',
+                        resource: {
+                            values: [[
+                                formData.date,
+                                formData.account,
+                                formData.payee,
+                                formData.checkNumber,
+                                formData.category,
+                                formData.amount,
+                                formData.notes,
+                                'N',
+                                formData.id
+                            ]]
+                        }
+                    });
+                }
+
+                closeModal('transaction-modal');
+                await loadAllData();
+                alert('Transaction saved successfully!');
+            } catch (err) {
+                console.error('Error saving transaction:', err);
+                alert('Failed to save transaction. Please try again.');
+            }
+        }
+
+        async function deleteTransaction(id) {
+            if (!confirm('Are you sure you want to delete this transaction?')) return;
+
+            const txn = transactions.find(t => t.id === id);
+            if (!txn) return;
+
+            try {
+                await gapi.client.sheets.spreadsheets.batchUpdate({
+                    spreadsheetId: spreadsheetId,
+                    resource: {
+                        requests: [{
+                            deleteDimension: {
+                                range: {
+                                    sheetId: 0, // Assumes Transactions is first sheet
+                                    dimension: 'ROWS',
+                                    startIndex: txn.rowIndex - 1,
+                                    endIndex: txn.rowIndex
+                                }
+                            }
+                        }]
+                    }
+                });
+
+                await loadAllData();
+                alert('Transaction deleted successfully!');
+            } catch (err) {
+                console.error('Error deleting transaction:', err);
+                alert('Failed to delete transaction. Please try again.');
+            }
+        }
+
+        // Search
+        function showSearch() {
+            populateAccountSelect('search-account');
+            populateCategorySelect('search-category');
+            
+            // Set default date range (last 30 days)
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            
+            document.getElementById('search-start-date').valueAsDate = startDate;
+            document.getElementById('search-end-date').valueAsDate = endDate;
+            
+            document.getElementById('search-modal').style.display = 'block';
+            performSearch();
+        }
+
+        function performSearch() {
+            const filters = {
+                startDate: document.getElementById('search-start-date').value,
+                endDate: document.getElementById('search-end-date').value,
+                account: document.getElementById('search-account').value,
+                payee: document.getElementById('search-payee').value.toLowerCase(),
+                category: document.getElementById('search-category').value,
+                reconciled: document.getElementById('search-reconciled').value
+            };
+
+            const filtered = transactions.filter(txn => {
+                if (filters.startDate && txn.date < filters.startDate) return false;
+                if (filters.endDate && txn.date > filters.endDate) return false;
+                if (filters.account && txn.account !== filters.account) return false;
+                if (filters.payee && !txn.payee.toLowerCase().includes(filters.payee)) return false;
+                if (filters.category && txn.category !== filters.category) return false;
+                if (filters.reconciled === 'Y' && !txn.reconciled) return false;
+                if (filters.reconciled === 'N' && txn.reconciled) return false;
+                return true;
+            });
+
+            const resultsDiv = document.getElementById('search-results');
+            
+            if (filtered.length === 0) {
+                resultsDiv.innerHTML = '<div class="alert alert-info">No transactions found matching your criteria.</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = `
+                <div class="alert alert-success">Found ${filtered.length} transaction${filtered.length !== 1 ? 's' : ''}</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Account</th>
+                                <th>Payee</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.map(txn => `
+                                <tr>
+                                    <td>${txn.date}</td>
+                                    <td>${txn.account}</td>
+                                    <td>${txn.payee}</td>
+                                    <td>${txn.category}</td>
+                                    <td class="${txn.amount >= 0 ? 'amount-positive' : 'amount-negative'}">
+                                        ${txn.amount >= 0 ? '+' : ''}$${Math.abs(txn.amount).toFixed(2)}
+                                    </td>
+                                    <td>${txn.reconciled ? '<span class="reconciled-badge">✓</span>' : '-'}</td>
+                                    <td>
+                                        <button class="btn btn-small" onclick='editTransactionById("${txn.id}"); closeModal("search-modal")'>Edit</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function clearSearch() {
+            document.getElementById('search-payee').value = '';
+            document.getElementById('search-account').value = '';
+            document.getElementById('search-category').value = '';
+            document.getElementById('search-reconciled').value = '';
+            
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            
+            document.getElementById('search-start-date').valueAsDate = startDate;
+            document.getElementById('search-end-date').valueAsDate = endDate;
+            
+            performSearch();
+        }
+
+        // Reconciliation
+        function showReconcile() {
+            populateAccountSelect('reconcile-account');
+            document.getElementById('reconcile-modal').style.display = 'block';
+            loadReconcileTransactions();
+        }
+
+        function loadReconcileTransactions() {
+            const account = document.getElementById('reconcile-account').value;
+            if (!account) return;
+
+            const accountTxns = transactions
+                .filter(t => t.account === account && !t.reconciled)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const container = document.getElementById('reconcile-transactions');
+            
+            if (accountTxns.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No unreconciled transactions for this account.</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <h4 style="margin: 20px 0 15px;">Unreconciled Transactions</h4>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" onchange="toggleAllReconcile(this.checked)">
+                                </th>
+                                <th>Date</th>
+                                <th>Payee</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${accountTxns.map(txn => `
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="reconcile-check" data-id="${txn.id}">
+                                    </td>
+                                    <td>${txn.date}</td>
+                                    <td>${txn.payee}</td>
+                                    <td class="${txn.amount >= 0 ? 'amount-positive' : 'amount-negative'}">
+                                        ${txn.amount >= 0 ? '+' : ''}$${Math.abs(txn.amount).toFixed(2)}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function toggleAllReconcile(checked) {
+            document.querySelectorAll('.reconcile-check').forEach(checkbox => {
+                checkbox.checked = checked;
+            });
+        }
+
+        async function saveReconciliation() {
+            const checkedBoxes = document.querySelectorAll('.reconcile-check:checked');
+            const idsToReconcile = Array.from(checkedBoxes).map(cb => cb.dataset.id);
+
+            if (idsToReconcile.length === 0) {
+                alert('Please select transactions to reconcile.');
+                return;
+            }
+
+            try {
+                for (const id of idsToReconcile) {
+                    const txn = transactions.find(t => t.id === id);
+                    if (txn) {
+                        await gapi.client.sheets.spreadsheets.values.update({
+                            spreadsheetId: spreadsheetId,
+                            range: `Transactions!H${txn.rowIndex}`,
+                            valueInputOption: 'RAW',
+                            resource: { values: [['Y']] }
+                        });
+                    }
+                }
+
+                closeModal('reconcile-modal');
+                await loadAllData();
+                alert(`${idsToReconcile.length} transaction${idsToReconcile.length !== 1 ? 's' : ''} reconciled successfully!`);
+            } catch (err) {
+                console.error('Error reconciling:', err);
+                alert('Failed to reconcile transactions. Please try again.');
+            }
+        }
+
+        // Account Management
+        function showManageAccounts() {
+            document.getElementById('manage-modal').style.display = 'block';
+        }
+
+        async function addAccount() {
+            const name = document.getElementById('new-account-name').value.trim();
+            const balance = parseFloat(document.getElementById('new-account-balance').value) || 0;
+
+            if (!name) {
+                alert('Please enter an account name.');
+                return;
+            }
+
+            try {
+                await gapi.client.sheets.spreadsheets.values.append({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Accounts!A2',
+                    valueInputOption: 'RAW',
+                    resource: { values: [[name, balance]] }
+                });
+
+                document.getElementById('new-account-name').value = '';
+                document.getElementById('new-account-balance').value = '';
+                
+                await loadAllData();
+                alert('Account added successfully!');
+            } catch (err) {
+                console.error('Error adding account:', err);
+                alert('Failed to add account. Please try again.');
+            }
+        }
+
+        async function addCategory() {
+            const name = document.getElementById('new-category-name').value.trim();
+
+            if (!name) {
+                alert('Please enter a category name.');
+                return;
+            }
+
+            try {
+                await gapi.client.sheets.spreadsheets.values.append({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Categories!A2',
+                    valueInputOption: 'RAW',
+                    resource: { values: [[name]] }
+                });
+
+                document.getElementById('new-category-name').value = '';
+                
+                await loadCategories();
+                alert('Category added successfully!');
+            } catch (err) {
+                console.error('Error adding category:', err);
+                alert('Failed to add category. Please try again.');
+            }
+        }
+
+        // Account Details
+        function showAccountDetails(accountName) {
+            const accountTxns = transactions
+                .filter(t => t.account === accountName)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const balance = calculateAccountBalance(accountName);
+
+            document.getElementById('account-modal-title').textContent = accountName;
+            document.getElementById('account-details').innerHTML = `
+                <div class="alert alert-info">
+                    <strong>Current Balance:</strong> $${balance.toFixed(2)}<br>
+                    <strong>Total Transactions:</strong> ${accountTxns.length}
+                </div>
+                ${accountTxns.length > 0 ? `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Payee</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${accountTxns.map(txn => `
+                                    <tr>
+                                        <td>${txn.date}</td>
+                                        <td>${txn.payee}</td>
+                                        <td>${txn.category}</td>
+                                        <td class="${txn.amount >= 0 ? 'amount-positive' : 'amount-negative'}">
+                                            ${txn.amount >= 0 ? '+' : ''}$${Math.abs(txn.amount).toFixed(2)}
+                                        </td>
+                                        <td>${txn.reconciled ? '<span class="reconciled-badge">✓</span>' : '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : '<p style="text-align: center; padding: 20px; color: #666;">No transactions yet.</p>'}
+            `;
+
+            document.getElementById('account-modal').style.display = 'block';
+        }
+
+        // Utility Functions
+        function populateAccountSelect(selectId, selectedValue = '') {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Select Account</option>' +
+                accounts.map(a => `<option value="${a.name}" ${a.name === selectedValue ? 'selected' : ''}>${a.name}</option>`).join('');
+        }
+
+        function populateCategorySelect(selectId, selectedValue = '') {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Select Category</option>' +
+                categories.map(c => `<option value="${c}" ${c === selectedValue ? 'selected' : ''}>${c}</option>`).join('');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function refreshData() {
+            await loadAllData();
+            alert('Data refreshed!');
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+    </script>
 </body>
 </html>
