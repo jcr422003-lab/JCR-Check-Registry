@@ -73,7 +73,7 @@ th,td{
 <!-- AUTH -->
 <div id="auth" class="center">
 <h3>Please sign in</h3>
-<button id="signinBtn">Sign In With Google</button>
+<button id="signin">Sign In With Google</button>
 </div>
 
 <!-- APP -->
@@ -93,62 +93,53 @@ th,td{
 
 <script>
 
-const CLIENT_ID="844911784466-5e3j5a23cp7j7470in5ntqlhjaeau3hg.apps.googleusercontent.com";
-const SHEET_ID="1h9fgmKiOHExTzFvZU4XExRk7Io0SFYyJowiR-mOPkiE";
-const SCOPE="https://www.googleapis.com/auth/spreadsheets";
-
-let tokenClient;
-let accessToken;
-
-let accounts=[];
-let transactions=[];
+console.log("Script start");
 
 /******** WAIT FOR GOOGLE *********/
-function waitForGoogle(){
+function wait(){
  if(window.google && google.accounts){
-   initAuth();
+   console.log("Google loaded");
+   init();
  } else {
-   setTimeout(waitForGoogle,100);
+   setTimeout(wait,100);
  }
 }
-waitForGoogle();
+wait();
 
 /******** AUTH *********/
-function initAuth(){
- tokenClient=google.accounts.oauth2.initTokenClient({
-   client_id:CLIENT_ID,
-   scope:SCOPE,
+function init(){
+
+ const CLIENT_ID="844911784466-5e3j5a23cp7j7470in5ntqlhjaeau3hg.apps.googleusercontent.com";
+ const SHEET_ID="1h9fgmKiOHExTzFvZU4XExRk7Io0SFYyJowiR-mOPkiE";
+ const SCOPE="https://www.googleapis.com/auth/spreadsheets";
+
+ let accessToken;
+
+ const client = google.accounts.oauth2.initTokenClient({
+   client_id: CLIENT_ID,
+   scope: SCOPE,
    callback:(r)=>{
-     accessToken=r.access_token;
+     console.log("Token OK");
+     accessToken = r.access_token;
      loadApp();
    }
  });
 
- document.getElementById("signinBtn").onclick=()=>{
-   tokenClient.requestAccessToken({prompt:""});
+ document.getElementById("signin").onclick=()=>{
+   console.log("Sign in clicked");
+   client.requestAccessToken({prompt:""});
  };
-}
 
-/******** LOAD APP *********/
-async function loadApp(){
- document.getElementById("auth").classList.add("hidden");
- document.getElementById("app").classList.remove("hidden");
+ /******** LOAD APP *********/
+ async function loadApp(){
+   document.getElementById("auth").classList.add("hidden");
+   document.getElementById("app").classList.remove("hidden");
 
- await loadAccounts();
- await loadTransactions();
-}
+   await loadAccounts();
+   await loadTransactions();
+ }
 
-/******** SHEETS *********/
-async function fetchSheet(range){
- const res=await fetch(
-  `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}`,
-  {headers:{Authorization:`Bearer ${accessToken}`}}
- );
- const data=await res.json();
- return data.values||[];
-}
-
-/******** ACCOUNTS *********/
-async function loadAccounts(){
- const rows=await fetchSheet("Accounts!A2:B");
- accounts=rows.map(r=>(
+ /******** SHEETS *********/
+ async function fetchSheet(range){
+   const res=await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}`,
