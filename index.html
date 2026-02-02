@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>JCR Check Registry</title>
 
 <!-- Google Identity -->
-<script src="https://accounts.google.com/gsi/client" defer></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 
 <style>
 body{font-family:system-ui;background:#f5f7fa;margin:0;padding:10px}
@@ -17,7 +18,17 @@ table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #ddd}
 .credit{color:green}
 .debit{color:red}
-header{background:#667eea;color:white;padding:15px;border-radius:8px;margin-bottom:15px;text-align:center}
+header{
+ background:#667eea;
+ color:white;
+ padding:15px;
+ border-radius:8px;
+ margin-bottom:15px;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+}
+.version{opacity:.8;font-size:12px}
 .card{background:white;padding:15px;border-radius:8px;margin-bottom:10px}
 </style>
 </head>
@@ -25,36 +36,4 @@ header{background:#667eea;color:white;padding:15px;border-radius:8px;margin-bott
 <body>
 
 <header>
-<h2>JCR Check Registry</h2>
-</header>
-
-<div id="auth">
-<p>Please sign in</p>
-<button onclick="signIn()">Sign In With Google</button>
-</div>
-
-<div id="app" class="hidden">
-
-<div class="card">
-<h3>Accounts</h3>
-<div id="accounts"></div>
-</div>
-
-<div class="card">
-<h3>Transactions</h3>
-<div id="transactions">Loading...</div>
-</div>
-
-</div>
-
-<script>
-const CLIENT_ID="844911784466-5e3j5a23cp7j7470in5ntqlhjaeau3hg.apps.googleusercontent.com";
-const SHEET_ID="1h9fgmKiOHExTzFvZU4XExRk7Io0SFYyJowiR-mOPkiE";
-const SCOPE="https://www.googleapis.com/auth/spreadsheets";
-
-let tokenClient;
-let accessToken;
-let transactions=[];
-let accounts=[];
-
-win
+<h2>JCR
