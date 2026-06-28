@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import type { Account, AppState, Category, Transaction } from './types'
 import { loadState, saveState } from './services/storage'
@@ -21,6 +21,9 @@ function App() {
   const [transactionPayee, setTransactionPayee] = useState('')
   const [transactionCategory, setTransactionCategory] = useState('')
   const [transactionAmount, setTransactionAmount] = useState(0)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [accountFilter, setAccountFilter] = useState('all')
+  const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -59,27 +62,88 @@ function App() {
     setAccountName('')
   }
 
+  const resetTransactionForm = () => {
+    setTransactionAccountId('')
+    setTransactionDate(new Date().toISOString().slice(0, 10))
+    setTransactionPayee('')
+    setTransactionCategory('')
+    setTransactionAmount(0)
+    setEditingTransactionId(null)
+  }
+
   const handleAddTransaction = () => {
     if (!transactionAccountId || !transactionPayee.trim() || !transactionCategory) return
 
-    const transaction: Transaction = {
-      id: uuidv4(),
+    const normalizedAmount = Number(transactionAmount)
+    if (Number.isNaN(normalizedAmount)) return
+
+    const transactionData = {
       accountId: transactionAccountId,
       date: transactionDate,
       payee: transactionPayee.trim(),
       category: transactionCategory,
-      amount: transactionAmount,
+      amount: normalizedAmount,
       isCleared: false,
       createdAt: new Date().toISOString()
     }
 
+    if (editingTransactionId) {
+      setState((current) => ({
+        ...current,
+        transactions: current.transactions.map((transaction) =>
+          transaction.id === editingTransactionId
+            ? { ...transaction, ...transactionData }
+            : transaction
+        )
+      }))
+    } else {
+      const transaction: Transaction = {
+        id: uuidv4(),
+        ...transactionData
+      }
+
+      setState((current) => ({
+        ...current,
+        transactions: [...current.transactions, transaction]
+      }))
+    }
+
+    resetTransactionForm()
+  }
+
+  const handleDeleteTransaction = (transactionId: string) => {
+    if (editingTransactionId === transactionId) {
+      resetTransactionForm()
+    }
+
     setState((current) => ({
       ...current,
-      transactions: [...current.transactions, transaction]
+      transactions: current.transactions.filter((transaction) => transaction.id !== transactionId)
     }))
-    setTransactionPayee('')
-    setTransactionAmount(0)
   }
+
+  const handleStartEditTransaction = (transaction: Transaction) => {
+    setEditingTransactionId(transaction.id)
+    setTransactionAccountId(transaction.accountId)
+    setTransactionDate(transaction.date)
+    setTransactionPayee(transaction.payee)
+    setTransactionCategory(transaction.category)
+    setTransactionAmount(transaction.amount)
+  }
+
+  const filteredTransactions = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+
+    return state.transactions.filter((transaction) => {
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        transaction.payee.toLowerCase().includes(normalizedSearch) ||
+        transaction.category.toLowerCase().includes(normalizedSearch)
+      const matchesAccount = accountFilter === 'all' || transaction.accountId === accountFilter
+
+      return matchesSearch && matchesAccount
+    })
+  }, [accountFilter, searchTerm, state.transactions])
 
   if (loading) {
     return <div className="loading">Loading...</div>
@@ -111,7 +175,7 @@ function App() {
         </div>
 
         <div className="form-card">
-          <h2>Add Transaction</h2>
+          <h2>{editingTransactionId ? 'Edit Transaction' : 'Add Transaction'}</h2>
           <select
             value={transactionAccountId}
             onChange={(event) => setTransactionAccountId(event.target.value)}
@@ -152,11 +216,48 @@ function App() {
             onChange={(event) => setTransactionAmount(Number(event.target.value))}
             step="0.01"
           />
-          <button onClick={handleAddTransaction}>Add transaction</button>
+          <button onClick={handleAddTransaction}>
+            {editingTransactionId ? 'Save changes' : 'Add transaction'}
+          </button>
+          {editingTransactionId ? (
+            <button className="secondary-button" onClick={resetTransactionForm}>
+              Cancel edit
+            </button>
+          ) : null}
         </div>
       </section>
 
-      <TransactionList transactions={state.transactions} />
+      <section className="transaction-list">
+        <div className="transaction-toolbar">
+          <div>
+            <h2>Transactions</h2>
+            <p>Search and filter your register history.</p>
+          </div>
+          <div className="filter-row">
+            <input
+              type="text"
+              placeholder="Search payee or category"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+            <select value={accountFilter} onChange={(event) => setAccountFilter(event.target.value)}>
+              <option value="all">All accounts</option>
+              {state.accounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <TransactionList
+          transactions={filteredTransactions}
+          accounts={state.accounts}
+          onEdit={handleStartEditTransaction}
+          onDelete={handleDeleteTransaction}
+        />
+      </section>
     </div>
   )
 }

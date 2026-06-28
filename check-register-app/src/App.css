@@ -111,6 +111,28 @@
   border-radius: 16px;
 }
 
+.transaction-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-row input,
+.filter-row select {
+  min-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid #dadada;
+  border-radius: 10px;
+}
+
 .transaction-list table {
   width: 100%;
   border-collapse: collapse;
@@ -129,6 +151,28 @@
 
 .transaction-list tbody tr:hover {
   background: #f8f7ff;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-buttons button,
+.secondary-button {
+  border: 1px solid var(--border);
+  background: #f7f5ff;
+  color: var(--text-h);
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.danger-button {
+  background: #fff1f2;
+  color: #b91c1c;
+  border-color: #fecdd3;
 }
 
 .positive {
@@ -150,5 +194,20 @@
 @media (max-width: 768px) {
   .form-section {
     grid-template-columns: 1fr;
+  }
+
+  .transaction-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-row {
+    flex-direction: column;
+  }
+
+  .filter-row input,
+  .filter-row select {
+    min-width: 0;
+    width: 100%;
   }
 }
