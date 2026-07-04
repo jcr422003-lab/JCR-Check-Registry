@@ -2,6 +2,8 @@
   max-width: 1024px;
   margin: 0 auto;
   padding: 24px;
+  color: var(--text);
+  background: var(--bg);
 }
 
 .app-header {
@@ -12,6 +14,36 @@
   text-align: left;
 }
 
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.menu-toggle,
+.theme-toggle {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-h);
+  border-radius: 999px;
+  min-height: 44px;
+  padding: 0 14px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.theme-toggle {
+  width: 44px;
+  padding: 0;
+  font-size: 1.1rem;
+}
+
 .app-header h1 {
   margin: 0;
   font-size: 2.5rem;
@@ -20,6 +52,7 @@
 .app-header p {
   margin: 0;
   color: var(--text);
+  font-weight: 500;
 }
 
 .dashboard {
@@ -34,7 +67,8 @@
 
 .account-card {
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--surface);
+  color: var(--text-h);
   border-radius: 16px;
   padding: 18px;
   text-align: left;
@@ -47,14 +81,21 @@
   box-shadow: var(--shadow);
 }
 
+.account-card.dragged {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
 .account-name {
   font-weight: 600;
   margin-bottom: 8px;
+  color: var(--text-h);
 }
 
 .account-balance {
   font-size: 1.5rem;
   font-weight: 700;
+  color: var(--text-h);
 }
 
 .form-section {
@@ -66,9 +107,97 @@
 
 .form-card {
   padding: 18px;
-  background: #fff;
+  background: var(--surface);
+  color: var(--text-h);
   border: 1px solid var(--border);
   border-radius: 16px;
+}
+
+.status-card,
+.auth-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 18px;
+}
+
+.status-card {
+  border-color: var(--accent-border);
+}
+
+.auth-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.auth-controls input {
+  min-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-h);
+}
+
+.auth-message {
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.menu-popover {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.menu-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  max-width: 360px;
+  box-shadow: var(--shadow);
+}
+
+.menu-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.primary-card {
+  border-color: var(--accent-border);
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.08);
+}
+
+.secondary-card {
+  background: var(--surface-alt);
+  border-style: dashed;
+  border-width: 1px;
+  padding: 14px;
+  opacity: 0.9;
+}
+
+.secondary-card h2 {
+  font-size: 1.05rem;
+}
+
+.secondary-card button {
+  background: var(--surface);
+  color: var(--text-h);
+  border: 1px solid var(--border);
+}
+
+.card-help {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 0.9rem;
 }
 
 .form-card h2 {
@@ -86,8 +215,10 @@
 .form-card input,
 .form-card select {
   padding: 10px 12px;
-  border: 1px solid #dadada;
+  border: 1px solid var(--border);
   border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-h);
 }
 
 .form-card button {
@@ -106,7 +237,8 @@
 
 .transaction-list {
   padding: 18px;
-  background: #fff;
+  background: var(--surface);
+  color: var(--text-h);
   border: 1px solid var(--border);
   border-radius: 16px;
 }
@@ -129,8 +261,10 @@
 .filter-row select {
   min-width: 220px;
   padding: 10px 12px;
-  border: 1px solid #dadada;
+  border: 1px solid var(--border);
   border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-h);
 }
 
 .transaction-list table {
@@ -149,6 +283,10 @@
   border-bottom: 1px solid var(--border);
 }
 
+.transaction-list td {
+  color: var(--text);
+}
+
 .transaction-list tbody tr:hover {
   background: #f8f7ff;
 }
@@ -162,7 +300,7 @@
 .action-buttons button,
 .secondary-button {
   border: 1px solid var(--border);
-  background: #f7f5ff;
+  background: var(--surface-alt);
   color: var(--text-h);
   padding: 8px 10px;
   border-radius: 8px;
@@ -192,6 +330,25 @@
 }
 
 @media (max-width: 768px) {
+  .header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    align-self: flex-end;
+  }
+
+  .status-card,
+  .auth-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .theme-toggle {
+    align-self: flex-end;
+  }
+
   .form-section {
     grid-template-columns: 1fr;
   }

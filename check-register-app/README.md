@@ -30,6 +30,14 @@ npm install
 npm run build
 ```
 
+## Server setup guide
+
+A browser-friendly HTML instruction page is available at:
+
+- [CENTOS_SERVER_SETUP.html](CENTOS_SERVER_SETUP.html)
+
+It walks through turning the ASUS laptop into a simple CentOS home server for the app.
+
 ## Project status
 
 This is an evolving local MVP. The next planned milestones are:

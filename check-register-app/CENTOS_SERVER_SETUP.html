@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CentOS Home Server Setup for the Check Register App</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --text: #162033;
+      --muted: #556276;
+      --accent: #1f6feb;
+      --border: #dce4ee;
+      --code-bg: #0f172a;
+      --code-text: #f8fafc;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+
+    h1, h2, h3 {
+      line-height: 1.2;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 2rem;
+    }
+
+    .intro {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .step-number {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+    }
+
+    code, pre {
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 14px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+
+    code {
+      background: #e8eef7;
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: #12304a;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    .note {
+      background: #eef6ff;
+      border-left: 4px solid var(--accent);
+      padding: 12px 14px;
+      border-radius: 8px;
+      color: #22466b;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>CentOS Home Server Setup for the ASUS Laptop</h1>
+    <p class="intro">Use this guide to turn the old ASUS laptop into a simple CentOS-based home server for the check register app.</p>
+
+    <section class="card">
+      <h2>1. Back up and prepare the laptop</h2>
+      <div class="step"><span class="step-number">1</span><div>Back up anything you want to keep from the laptop.</div></div>
+      <div class="step"><span class="step-number">2</span><div>Download the latest CentOS Stream ISO from the official CentOS site.</div></div>
+      <div class="step"><span class="step-number">3</span><div>Create a bootable USB installer with a tool such as Balena Etcher or Rufus.</div></div>
+      <div class="step"><span class="step-number">4</span><div>Boot the ASUS laptop from the USB drive. On many ASUS models, press <code>F2</code> or <code>Delete</code> to enter BIOS and choose the USB device from the boot menu.</div></div>
+      <div class="step"><span class="step-number">5</span><div>If the installer does not boot, try disabling Secure Boot temporarily in BIOS.</div></div>
+    </section>
+
+    <section class="card">
+      <h2>2. Install CentOS</h2>
+      <div class="step"><span class="step-number">1</span><div>Choose the <strong>Minimal Install</strong> option.</div></div>
+      <div class="step"><span class="step-number">2</span><div>Set a hostname such as <code>check-home</code>.</div></div>
+      <div class="step"><span class="step-number">3</span><div>Create a root password and a non-root administrator account.</div></div>
+      <div class="step"><span class="step-number">4</span><div>Make sure networking is enabled during installation.</div></div>
+    </section>
+
+    <section class="card">
+      <h2>3. Update the system</h2>
+      <pre>sudo dnf update -y
+sudo dnf install -y git curl wget nano</pre>
+    </section>
+
+    <section class="card">
+      <h2>4. Install Node.js</h2>
+      <pre>curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo dnf install -y nodejs
+node --version
+npm --version</pre>
+      <p>This gives the laptop a current Node.js runtime for the app.</p>
+    </section>
+
+    <section class="card">
+      <h2>5. Install a process manager</h2>
+      <pre>sudo npm install -g pm2</pre>
+      <p>PM2 helps keep the app running after reboots.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Clone the app onto the server</h2>
+      <pre>cd /opt
+sudo git clone https://github.com/jcr422003-lab/JCR-Check-Registry.git
+cd /opt/JCR-Check-Registry/check-register-app
+npm install
+npm run build</pre>
+    </section>
+
+    <section class="card">
+      <h2>7. Run the app on the home network</h2>
+      <pre>npm run dev -- --host 0.0.0.0 --port 3000</pre>
+      <p>Then open the laptop’s local IP address from another device on your home Wi-Fi.</p>
+      <pre>hostname -I</pre>
+      <p>Example: <code>http://192.168.1.50:3000</code></p>
+    </section>
+
+    <section class="card">
+      <h2>8. Make it start automatically</h2>
+      <p>Create a systemd service so the app comes back after a reboot.</p>
+      <pre>sudo nano /etc/systemd/system/check-register.service</pre>
+      <pre>[Unit]
+Description=Check Register App
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/JCR-Check-Registry/check-register-app
+ExecStart=/usr/bin/npm run dev -- --host 0.0.0.0 --port 3000
+Restart=always
+User=your-username
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target</pre>
+      <pre>sudo systemctl daemon-reload
+sudo systemctl enable --now check-register.service
+sudo systemctl status check-register.service</pre>
+    </section>
+
+    <section class="card">
+      <h2>9. Keep the laptop available</h2>
+      <ul>
+        <li>Plug the laptop in whenever you want it available all the time.</li>
+        <li>Set power settings to never sleep while plugged in.</li>
+        <li>Keep the Wi-Fi connected to the home network.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>10. Optional next step: home-only write access</h2>
+      <p>The app can later be configured so that full write access is allowed only while connected to your trusted home Wi-Fi, and the app becomes read-only or queues changes when you are away.</p>
+    </section>
+
+    <div class="note">
+      <strong>Note:</strong> This setup is intentionally simple and local-first. It keeps the app on your home network and avoids exposing it to the public internet.
+    </div>
+  </main>
+</body>
+</html>

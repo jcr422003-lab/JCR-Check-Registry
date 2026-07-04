@@ -2,9 +2,12 @@
 import { v4 as uuidv4 } from 'uuid'
 import type { Account, AppState, Category, Transaction } from './types'
 import { loadState, saveState } from './services/storage'
+import { getCurrentUser, signInWithMagicLink, signOut, supabase } from './services/supabase'
 import { Dashboard } from './components/Dashboard'
 import { TransactionList } from './components/TransactionList'
 import './App.css'
+
+const THEME_STORAGE_KEY = 'check-register-theme'
 
 const defaultCategories: Category[] = [
   { id: 'cat-1', name: 'Groceries', createdAt: new Date().toISOString() },
@@ -20,19 +23,31 @@ function App() {
   const [transactionDate, setTransactionDate] = useState(new Date().toISOString().slice(0, 10))
   const [transactionPayee, setTransactionPayee] = useState('')
   const [transactionCategory, setTransactionCategory] = useState('')
-  const [transactionAmount, setTransactionAmount] = useState(0)
+  const [transactionAmount, setTransactionAmount] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light'
+    return (window.localStorage.getItem(THEME_STORAGE_KEY) as 'light' | 'dark' | null) ?? 'light'
+  })
   const [accountFilter, setAccountFilter] = useState('all')
   const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null)
+  const [showAccountMenu, setShowAccountMenu] = useState(false)
+  const [draggedAccountId, setDraggedAccountId] = useState<string | null>(null)
+  const [authEmail, setAuthEmail] = useState('')
+  const [isHomeNetwork, setIsHomeNetwork] = useState(true)
+  const [authMessage, setAuthMessage] = useState('')
+  const [userEmail, setUserEmail] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
       const savedState = await loadState()
+      const currentUser = await getCurrentUser()
       setState({
         accounts: savedState.accounts,
         categories: savedState.categories.length > 0 ? savedState.categories : defaultCategories,
         transactions: savedState.transactions
       })
+      setUserEmail(currentUser?.email ?? null)
       setLoading(false)
     }
 
@@ -45,7 +60,24 @@ function App() {
     }
   }, [state, loading])
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+  }, [theme])
+
+  useEffect(() => {
+    const currentHost = window.location.hostname
+    const homeHostnames = ['localhost', '127.0.0.1', '0.0.0.0', 'home.local', 'check-home']
+    const isHome = currentHost === 'localhost' || currentHost === '127.0.0.1' || homeHostnames.includes(currentHost)
+    setIsHomeNetwork(isHome)
+  }, [])
+
   const handleAddAccount = () => {
+    if (!isHomeNetwork) {
+      setAuthMessage('Account creation is available only while connected to the home network.')
+      return
+    }
+
     if (!accountName.trim()) return
 
     const account: Account = {
@@ -60,6 +92,7 @@ function App() {
       accounts: [...current.accounts, account]
     }))
     setAccountName('')
+    setShowAccountMenu(false)
   }
 
   const resetTransactionForm = () => {
@@ -67,14 +100,22 @@ function App() {
     setTransactionDate(new Date().toISOString().slice(0, 10))
     setTransactionPayee('')
     setTransactionCategory('')
-    setTransactionAmount(0)
+    setTransactionAmount('')
     setEditingTransactionId(null)
   }
 
   const handleAddTransaction = () => {
+    if (!isHomeNetwork) {
+      setAuthMessage('Transactions can only be added while connected to the home network.')
+      return
+    }
+
     if (!transactionAccountId || !transactionPayee.trim() || !transactionCategory) return
 
-    const normalizedAmount = Number(transactionAmount)
+    const trimmedAmount = transactionAmount.trim()
+    if (!trimmedAmount) return
+
+    const normalizedAmount = Number(trimmedAmount)
     if (Number.isNaN(normalizedAmount)) return
 
     const transactionData = {
@@ -128,7 +169,58 @@ function App() {
     setTransactionDate(transaction.date)
     setTransactionPayee(transaction.payee)
     setTransactionCategory(transaction.category)
-    setTransactionAmount(transaction.amount)
+    setTransactionAmount(String(transaction.amount))
+  }
+
+  const handleReorderAccounts = (fromId: string, toId: string) => {
+    if (fromId === toId) return
+
+    setState((current) => {
+      const accounts = [...current.accounts]
+      const fromIndex = accounts.findIndex((account) => account.id === fromId)
+      const toIndex = accounts.findIndex((account) => account.id === toId)
+
+      if (fromIndex < 0 || toIndex < 0) return current
+
+      const [moved] = accounts.splice(fromIndex, 1)
+      accounts.splice(toIndex, 0, moved)
+
+      return { ...current, accounts }
+    })
+  }
+
+  const handleAuthSubmit = async () => {
+    if (!authEmail.trim()) return
+
+    if (!supabase) {
+      setAuthMessage('Supabase is not configured yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable sign-in.')
+      return
+    }
+
+    const { error } = await signInWithMagicLink(authEmail.trim())
+    if (error) {
+      setAuthMessage(error.message)
+      return
+    }
+
+    setAuthMessage('Magic link sent. Check your email to continue.')
+    setAuthEmail('')
+  }
+
+  const handleSignOut = async () => {
+    if (!supabase) {
+      setAuthMessage('Supabase is not configured yet.')
+      return
+    }
+
+    const { error } = await signOut()
+    if (error) {
+      setAuthMessage(error.message)
+      return
+    }
+
+    setUserEmail(null)
+    setAuthMessage('Signed out.')
   }
 
   const filteredTransactions = useMemo(() => {
@@ -152,29 +244,107 @@ function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <h1>Check Register</h1>
-        <p>Shared mobile + browser financial register</p>
+        <div className="header-row">
+          <div>
+            <h1>Check Register</h1>
+            <p>Shared mobile + browser financial register</p>
+          </div>
+          <div className="header-actions">
+            <button
+              type="button"
+              className="menu-toggle"
+              onClick={() => setShowAccountMenu((current) => !current)}
+            >
+              ☰ Menu
+            </button>
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))}
+              aria-label="Toggle color theme"
+            >
+              {theme === 'light' ? '🌙' : '☀️'}
+            </button>
+          </div>
+        </div>
       </header>
+
+      {showAccountMenu ? (
+        <div className="menu-popover">
+          <div className="menu-card">
+            <h2>Add account</h2>
+            <p className="card-help">Create a new account and it will appear in your ordered account list.</p>
+            <input
+              type="text"
+              placeholder="Account name"
+              value={accountName}
+              onChange={(event) => setAccountName(event.target.value)}
+            />
+            <div className="menu-actions">
+              <button onClick={handleAddAccount}>Save account</button>
+              <button className="secondary-button" onClick={() => setShowAccountMenu(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <section className="status-card">
+        <div>
+          <h2>Home mode</h2>
+          <p className="card-help">
+            {isHomeNetwork
+              ? 'You are on the trusted home network, so writes are enabled.'
+              : 'You are outside the home network. Writes are disabled until you reconnect.'}
+          </p>
+        </div>
+      </section>
+
+      <section className="auth-card">
+        <div>
+          <h2>Sign in</h2>
+          <p className="card-help">
+            {userEmail ? `Signed in as ${userEmail}` : 'Use email sign-in when Supabase is configured.'}
+          </p>
+        </div>
+        {!userEmail ? (
+          <div className="auth-controls">
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={authEmail}
+              onChange={(event) => setAuthEmail(event.target.value)}
+            />
+            <button type="button" onClick={handleAuthSubmit}>
+              Send magic link
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="secondary-button" onClick={handleSignOut}>
+            Sign out
+          </button>
+        )}
+        {authMessage ? <p className="auth-message">{authMessage}</p> : null}
+      </section>
 
       <Dashboard
         accounts={state.accounts}
         transactions={state.transactions}
         onSelectAccount={() => {}}
+        draggedAccountId={draggedAccountId}
+        onDragStart={(accountId) => setDraggedAccountId(accountId)}
+        onDragOver={(accountId) => {
+          if (draggedAccountId && draggedAccountId !== accountId) {
+            handleReorderAccounts(draggedAccountId, accountId)
+            setDraggedAccountId(accountId)
+          }
+        }}
+        onDrop={() => setDraggedAccountId(null)}
       />
 
       <section className="form-section">
-        <div className="form-card">
-          <h2>Add Account</h2>
-          <input
-            type="text"
-            placeholder="Account name"
-            value={accountName}
-            onChange={(event) => setAccountName(event.target.value)}
-          />
-          <button onClick={handleAddAccount}>Add account</button>
-        </div>
-
-        <div className="form-card">
+        <div className="form-card primary-card">
           <h2>{editingTransactionId ? 'Edit Transaction' : 'Add Transaction'}</h2>
           <select
             value={transactionAccountId}
@@ -210,11 +380,11 @@ function App() {
             ))}
           </select>
           <input
-            type="number"
+            type="text"
+            inputMode="decimal"
             placeholder="Amount"
             value={transactionAmount}
-            onChange={(event) => setTransactionAmount(Number(event.target.value))}
-            step="0.01"
+            onChange={(event) => setTransactionAmount(event.target.value)}
           />
           <button onClick={handleAddTransaction}>
             {editingTransactionId ? 'Save changes' : 'Add transaction'}
